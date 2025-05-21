@@ -103,7 +103,7 @@ az functionapp config appsettings set --name $FUNCTION_APP \
 # Ligar App Service ao GitHub para CI/CD
 az webapp deployment source config --name $APP_NAME \
                                    --resource-group $RESOURCE_GROUP \
-                                   --repo-url https://github.com/Teresa-ipcb/cn.git \
+                                   --repo-url https://github.com/Teresa-ipcb/urbangeist.git \
                                    --branch master \
                                    --repository-type github
 
