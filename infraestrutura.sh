@@ -74,38 +74,44 @@ az maps account create --name $AZURE_MAPS_ACCOUNT \
                        --location $LOCATION \
                        --sku S0
 
-AZURE_MAPS_KEY=$(az maps account keys list \
-  --name $AZURE_MAPS_ACCOUNT \
-  --resource-group $RESOURCE_GROUP \
-  --query "primaryKey" \
-  --output tsv)
+AZURE_MAPS_KEY=$(az maps account keys list --name $AZURE_MAPS_ACCOUNT \
+										   --resource-group $RESOURCE_GROUP \
+										   --query "primaryKey" \
+										   --output tsv)
 
 # Obter string de conexão da CosmosDB
-COSMOSDB_CONN_STRING=$(az cosmosdb keys list \
-  --type connection-strings \
-  --name $COSMOSDB_NAME \
-  --resource-group $RESOURCE_GROUP \
-  --query "connectionStrings[0].connectionString" \
-  --output tsv)
+COSMOSDB_CONN_STRING=$(az cosmosdb keys list --type connection-strings \
+											 --name $COSMOSDB_NAME \
+											 --resource-group $RESOURCE_GROUP \
+											 --query "connectionStrings[0].connectionString" \
+											 --output tsv)
 
 # Definir variáveis de ambiente para App Service
 az webapp config appsettings set --name $APP_NAME \
-    --resource-group $RESOURCE_GROUP \
-    --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
-               COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING"
+								 --resource-group $RESOURCE_GROUP \
+								 --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
+										    COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING"
 
 # Definir variáveis de ambiente para Function App
 az functionapp config appsettings set --name $FUNCTION_APP \
-    --resource-group $RESOURCE_GROUP \
-    --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
-               COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING"
+									  --resource-group $RESOURCE_GROUP \
+									  --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
+												 COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING"
 
 # Ligar App Service ao GitHub para CI/CD
 az webapp deployment source config --name $APP_NAME \
                                    --resource-group $RESOURCE_GROUP \
-                                   --repo-url https://github.com/Teresa-ipcb/urbangeist.git \
+                                   --repo-url https://github.com/Teresa-ipcb/cn.git \
                                    --branch master \
                                    --repository-type github
-
+		
 echo "Infraestrutura criada com sucesso!"
-echo "As Azure Functions devem ser chamadas para inserir e ler dados."
+		
+# Parte final do infraestrutura.sh
+chmod +x scripts/seed_categorias.sh
+chmod +x scripts/fetch_locais.sh
+
+./scripts/seed_categorias.sh
+./scripts/fetch_locais.sh
+
+
