@@ -2,11 +2,20 @@ navigator.geolocation.getCurrentPosition(pos => {
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
 
-  fetch(`/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
+  fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
+    .then(res => {
+      if (!res.ok) throw new Error("Erro ao chamar fetchNearbyPlaces");
+      return res.json();
+    })
     .then(() => fetch("/api/locais"))
-    .then(res => res.json())
-    .then(mostrarNoMapa);
+    .then(res => {
+      if (!res.ok) throw new Error("Erro ao obter locais");
+      return res.json();
+    })
+    .then(mostrarNoMapa)
+    .catch(err => {
+      console.error("Erro ao carregar locais:", err.message);
+    });
 });
 
 let map, dataSource;
@@ -23,7 +32,7 @@ function mostrarNoMapa(locais) {
     zoom: 12,
     authOptions: {
       authType: "subscriptionKey",
-      subscriptionKey: "AZURE_MAPS_KEY substituída dinamicamente no HTML"
+      subscriptionKey: "SUBSTITUIR AQUI com AZURE_MAPS_KEY se for local"
     }
   });
 
@@ -47,7 +56,6 @@ function mostrarNoMapa(locais) {
       img.alt = loc.nome;
       img.className = "thumb";
 
-      // Aumentar imagem ao clicar
       img.onclick = () => {
         const overlay = document.createElement("div");
         overlay.className = "modal";
