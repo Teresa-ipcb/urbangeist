@@ -2,7 +2,7 @@ navigator.geolocation.getCurrentPosition(pos => {
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
 
-  fetch(`/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
+  fetch(`/api/fetchnearbyplaces?lat=${lat}&lon=${lon}`)
     .then(res => res.json())
     .then(() => fetch("/api/locais"))
     .then(res => res.json())
