@@ -1,10 +1,13 @@
 const axios = require("axios");
 const { MongoClient } = require("mongodb");
 
+console.log("Teste");
 module.exports = async function (context, req) {
   const { lat, lon } = req.query;
 
+  console.log("Teste2");
   if (!lat || !lon) {
+    console.log("400");
     context.res = { status: 400, body: "Parâmetros 'lat' e 'lon' obrigatórios." };
     return;
   }
@@ -14,6 +17,7 @@ module.exports = async function (context, req) {
 
   if (!mapsKey || !mongoUri) {
     context.res = {
+      console.log("500");
       status: 500,
       body: "Erro de configuração: chaves AZURE_MAPS_KEY ou COSMOSDB_CONN_STRING não definidas."
     };
