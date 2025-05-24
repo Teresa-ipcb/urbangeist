@@ -1,31 +1,35 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>UrbanGeist</title>
-
-  <!-- Azure Maps SDK -->
-  <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" />
-
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    h1 { padding: 1rem; background: #333; color: white; text-align: center; }
-    #map { height: 400px; width: 100%; }
-    #lista-locais { padding: 1rem; }
-    section { margin-bottom: 2rem; }
-    .local-item { margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
-    .local-item img { border-radius: 8px; margin-bottom: 0.5rem; }
-    button { padding: 0.5rem; border: none; background-color: #f0c420; border-radius: 5px; cursor: pointer; }
-    button:hover { background-color: #e0b200; }
+    #mapa { height: 400px; }
+    #lista-locais { padding: 1em; display: flex; flex-wrap: wrap; gap: 1em; }
+    .local-card { width: 200px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .thumb { width: 100%; cursor: pointer; border-radius: 4px; transition: transform 0.2s; }
+    .thumb:hover { transform: scale(1.05); }
+
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center;
+    }
+    .modal-content img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 0 20px black;
+    }
   </style>
 </head>
 <body>
-  <h1>UrbanGeist - Pontos de Interesse</h1>
-  <div id="map"></div>
-  <h2 style="padding: 1rem;">Locais Próximos</h2>
+  <div id="mapa"></div>
   <div id="lista-locais"></div>
 
+  <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
