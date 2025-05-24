@@ -5,7 +5,7 @@ navigator.geolocation.getCurrentPosition(pos => {
   console.log("TESTE");
   console.log(lat);
   
-  fetch(`/api/fetchnearbyplaces?lat=${lat}&lon=${lon}`)
+  fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
     .then(res => res.json())
     .then(() => fetch("/api/locais"))
     .then(res => res.json())
