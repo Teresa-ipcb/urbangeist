@@ -13,11 +13,15 @@ module.exports = async function (context, req) {
   const mongoUri = process.env.COSMOSDB_CONN_STRING;
 
   if (!mapsKey || !mongoUri) {
-    context.res = { status: 500, body: "Erro de configuração: chaves de ambiente não definidas." };
+    context.res = {
+      status: 500,
+      body: "Erro de configuração: chaves AZURE_MAPS_KEY ou COSMOSDB_CONN_STRING não definidas."
+    };
     return;
   }
 
   const radius = 20000;
+
   const categoriaMap = {
     "Lazer": "1",
     "Eventos": "2",
@@ -27,10 +31,13 @@ module.exports = async function (context, req) {
   };
 
   try {
+    context.log("📡 Ligando à base de dados...");
     const client = new MongoClient(mongoUri);
     await client.connect();
     const db = client.db("urbangeist");
     const col = db.collection("tb_local");
+
+    context.log("🧠 Ligado com sucesso. A consultar Azure Maps...");
 
     for (const [categoria, categoriaId] of Object.entries(categoriaMap)) {
       const response = await axios.get("https://atlas.microsoft.com/search/poi/json", {
@@ -44,6 +51,8 @@ module.exports = async function (context, req) {
           "limit": 10
         }
       });
+
+      context.log(`📍 Categoria: ${categoria}, Resultados: ${response.data.results.length}`);
 
       const locais = response.data.results.map(poi => ({
         nome: poi.poi.name,
@@ -63,14 +72,22 @@ module.exports = async function (context, req) {
           nome: local.nome,
           "coords.coordinates": local.coords.coordinates
         });
-        if (!existe) await col.insertOne(local);
+        if (!existe) {
+          await col.insertOne(local);
+          context.log(`✔️ Inserido: ${local.nome}`);
+        } else {
+          context.log(`⚠️ Já existe: ${local.nome}`);
+        }
       }
     }
 
     await client.close();
     context.res = { status: 200, body: "Locais adicionados com sucesso." };
   } catch (err) {
-    context.log.error("Erro na função fetchNearbyPlaces:", err);
-    context.res = { status: 500, body: "Erro interno ao buscar ou gravar locais." };
+    context.log.error("❌ Erro na função fetchNearbyPlaces:", err.message, err.stack);
+    context.res = {
+      status: 500,
+      body: `Erro interno: ${err.message}`
+    };
   }
 };
