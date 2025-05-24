@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>UrbanGeist</title>
+
+  <!-- Azure Maps SDK -->
+  <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+  <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" />
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    h1 { padding: 1rem; background: #333; color: white; text-align: center; }
+    #map { height: 400px; width: 100%; }
+    #lista-locais { padding: 1rem; }
+    section { margin-bottom: 2rem; }
+    .local-item { margin-bottom: 1rem; border-bottom: 1px solid #ccc; padding-bottom: 1rem; }
+    .local-item img { border-radius: 8px; margin-bottom: 0.5rem; }
+    button { padding: 0.5rem; border: none; background-color: #f0c420; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #e0b200; }
+  </style>
+</head>
+<body>
+  <h1>UrbanGeist - Pontos de Interesse</h1>
+  <div id="map"></div>
+  <h2 style="padding: 1rem;">Locais Próximos</h2>
+  <div id="lista-locais"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
