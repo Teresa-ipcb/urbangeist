@@ -106,6 +106,10 @@ az webapp deployment source config --name $APP_NAME \
                                    --repository-type github
 		
 echo "Infraestrutura criada com sucesso!"
+
+cd scripts
+npm install mongodb@3.7 > /dev/null 2>&1
+cd ..
 		
 # Parte final do infraestrutura.sh
 chmod +x scripts/seed_categorias.sh
