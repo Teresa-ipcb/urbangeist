@@ -75,28 +75,36 @@ az maps account create --name $AZURE_MAPS_ACCOUNT \
 					   --kind Gen2
 
 AZURE_MAPS_KEY=$(az maps account keys list --name $AZURE_MAPS_ACCOUNT \
-										   --resource-group $RESOURCE_GROUP \
-										   --query "primaryKey" \
-										   --output tsv)
+                                           --resource-group $RESOURCE_GROUP \
+                                           --query "primaryKey" \
+                                           --output tsv)
 
 # Obter string de conexão da CosmosDB
 COSMOSDB_CONN_STRING=$(az cosmosdb keys list --type connection-strings \
-											 --name $COSMOSDB_NAME \
-											 --resource-group $RESOURCE_GROUP \
-											 --query "connectionStrings[0].connectionString" \
-											 --output tsv)
+                                             --name $COSMOSDB_NAME \
+                                             --resource-group $RESOURCE_GROUP \
+                                             --query "connectionStrings[0].connectionString" \
+                                             --output tsv)
+
+# Obter string de conexão da Storage
+STORAGE_CONN_STRING=$(az storage account show-connection-string --name $STORAGE_ACCOUNT \
+                                                                --resource-group $RESOURCE_GROUP \
+                                                                --query connectionString \
+                                                                --output tsv)
 
 # Definir variáveis de ambiente para App Service
 az webapp config appsettings set --name $APP_NAME \
-								 --resource-group $RESOURCE_GROUP \
-								 --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
-										    COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING"
+                                 --resource-group $RESOURCE_GROUP \
+                                 --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
+                                                  COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
+                                                  AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" 
 
 # Definir variáveis de ambiente para Function App
 az functionapp config appsettings set --name $FUNCTION_APP \
-									  --resource-group $RESOURCE_GROUP \
-									  --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
-												 COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING"
+                                      --resource-group $RESOURCE_GROUP \
+                                      --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
+												                         COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
+                                                 AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" 
 
 # Ligar App Service ao GitHub para CI/CD
 az webapp deployment source config --name $APP_NAME \
