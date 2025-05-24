@@ -91,15 +91,23 @@ module.exports = async function (context, req) {
     await client.close();
     context.res = { status: 200, body: "Locais adicionados com sucesso." };
     } catch (err) {
-    context.log.error("ERRO INTERNO DETETADO");
-    context.log.error("Mensagem:", err.message || "sem mensagem");
-    context.log.error("Stacktrace:");
-    context.log.error(err.stack || "sem stack");
-
-    context.res = {
-      status: 500,
-      body: "Erro interno: " + (err.message || "desconhecido")
-    };
+      context.log.error("ERRO INTERNO DETETADO");
+      context.log.error("Mensagem:", err.message || "sem mensagem");
+    
+      if (err.response) {
+        context.log.error("📡 Azure Maps ou API externa respondeu com erro:");
+        context.log.error("Status:", err.response.status);
+        context.log.error("Data:", JSON.stringify(err.response.data));
+      }
+    
+      context.log.error("Stacktrace:");
+      context.log.error(err.stack || "sem stack");
+    
+      context.res = {
+        status: 500,
+        body: "Erro interno: " + (err.message || "desconhecido")
+  };
+}
   }
 
 };
