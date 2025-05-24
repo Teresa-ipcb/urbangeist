@@ -1,5 +1,8 @@
 #!/bin/bash
 
+cd "$(dirname "$0")"
+npm install mongodb@3.7 > /dev/null 2>&1
+
 # Nome dos recursos
 RESOURCE_GROUP="urbangeist-rg"
 COSMOSDB_NAME="urbangeist-db"
@@ -53,7 +56,7 @@ echo "Script concluído com sucesso."
 
 echo "A publicar Azure Functions para o Azure..."
 
-cd ../backend
+cd "$(dirname "$0")/../backend"
 func azure functionapp publish urbangeist-function
 
-cd ../scripts
+cd "$(dirname "$0")
