@@ -13,8 +13,6 @@ COSMOSDB_CONN_STRING=$(az cosmosdb keys list --type connection-strings \
 
 # Exportar para usar no process.env
 export COSMOSDB_CONN_STRING
-
-npm install mongodb@3.7 > /dev/null 2>&1
 export NODE_PATH=./node_modules
 
 echo "A verificar/inserir categorias..."
@@ -52,3 +50,10 @@ const { MongoClient } = require("mongodb");
 EOF
 
 echo "Script concluído com sucesso."
+
+echo "A publicar Azure Functions para o Azure..."
+
+cd ../backend
+func azure functionapp publish urbangeist-function
+
+cd ../scripts
