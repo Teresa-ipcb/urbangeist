@@ -71,8 +71,8 @@ az functionapp identity assign --name $FUNCTION_APP --resource-group $RESOURCE_G
 # Criar Azure Maps e obter chave
 az maps account create --name $AZURE_MAPS_ACCOUNT \
                        --resource-group $RESOURCE_GROUP \
-                       --location $LOCATION \
-                       --sku S0
+                       --sku G2 \
+					   --kind Gen2
 
 AZURE_MAPS_KEY=$(az maps account keys list --name $AZURE_MAPS_ACCOUNT \
 										   --resource-group $RESOURCE_GROUP \
