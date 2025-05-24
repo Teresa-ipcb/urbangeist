@@ -109,9 +109,7 @@ echo "Infraestrutura criada com sucesso!"
 		
 # Parte final do infraestrutura.sh
 chmod +x scripts/seed_categorias.sh
-chmod +x scripts/fetch_locais.sh
+#chmod +x scripts/fetch_locais.sh
 
 ./scripts/seed_categorias.sh
-./scripts/fetch_locais.sh
-
-
+#./scripts/fetch_locais.sh
