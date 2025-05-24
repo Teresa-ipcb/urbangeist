@@ -13,6 +13,8 @@ COSMOSDB_CONN_STRING=$(az cosmosdb keys list --type connection-strings \
 
 # Exportar para usar no process.env
 export COSMOSDB_CONN_STRING
+npm install mongodb@3.7 > /dev/null 2>&1
+export NODE_PATH=./node_modules
 
 echo "A verificar/inserir categorias..."
 
@@ -21,7 +23,7 @@ const { MongoClient } = require("mongodb");
 
 (async () => {
   const uri = process.env.COSMOSDB_CONN_STRING;
-  const client = new MongoClient(uri);
+  const client = new MongoClient(uri, { useUnifiedTopology: true });
 
   await client.connect();
   const db = client.db("urbangeist");
