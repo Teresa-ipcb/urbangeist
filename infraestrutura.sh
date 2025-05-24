@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Variáveis
-RESOURCE_GROUP="urbangeist-rg2"
+RESOURCE_GROUP="urbangeist-rg"
 LOCATION="francecentral"
-APP_NAME="urbangeist-app2"
-COSMOSDB_NAME="urbangeist-db2"
-BD_NAME="urbangeist2"
-STORAGE_ACCOUNT="urbangeiststorage2"
-FUNCTION_APP="urbangeist-function2"
+APP_NAME="urbangeist-app"
+COSMOSDB_NAME="urbangeist-db"
+BD_NAME="urbangeist"
+STORAGE_ACCOUNT="urbangeiststorage"
+FUNCTION_APP="urbangeist-function"
 AZURE_MAPS_ACCOUNT="urbangeist-maps"
 
 # Criar Resource Group
