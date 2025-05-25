@@ -75,7 +75,7 @@ hr {
 }
 
 /* Mapa */
-.mapa {
+#mapa {
     width: 100%;
     height: 400px;
     background-color: #ccc;
@@ -86,36 +86,6 @@ hr {
     font-weight: bold;
     font-size: 20px;
     margin-bottom: 30px;
-}
-
-/*Pesquisa*/
-.search-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    margin-right: auto;
-    width: 105%;
-}
-
-.search-bar input {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 20px 0 0 20px;
-    width: 100%;
-    font-size: 14px;
-    background-color: #ffffff;
-    color: #222831;
-}
-
-.search-bar button {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 0 20px 20px 0;
-    background-color: #00ADB5;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
 }
 
 
