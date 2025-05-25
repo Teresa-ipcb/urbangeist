@@ -12,7 +12,7 @@ module.exports = async function (context, req) {
 
     const mapsKey = process.env.AZURE_MAPS_KEY;
     const mongoUri = process.env.COSMOSDB_CONN_STRING;
-    const blobConn = process.env.BLOB_CONN_STRING;
+    const blobConn = process.env.STORAGE_CONN_STRING;
     if (!mapsKey || !mongoUri || !blobConn) {
       context.res = { status: 500, body: "Variáveis de ambiente em falta." };
       return;
