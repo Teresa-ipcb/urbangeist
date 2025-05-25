@@ -8,23 +8,23 @@
 
 body
 {
-    background-color: #222831;
-    background-image: url(textures/green-dust-and-scratches.png);
+    background-color: #618b8c;
+    background-image: url("https://www.transparenttextures.com/patterns/green-dust-and-scratches.png");
 }
 
 .footer
 {
     align-items: center;
-    background-color: #222831;
-    background-image: url(textures/green-dust-and-scratches.png);
+    background-color: #618b8c;
+    background-image: url("https://www.transparenttextures.com/patterns/green-dust-and-scratches.png");
     padding-bottom: 50px; 
     padding-top: 95px;
 }
 
 .header
 {
-    background-color: #222831;
-    background-image: url(textures/green-dust-and-scratches.png);
+    background-color: #618b8c;
+    background-image: url("https://www.transparenttextures.com/patterns/green-dust-and-scratches.png");
     height: 6vh;
     overflow: hidden;
     padding-bottom: 38px;
