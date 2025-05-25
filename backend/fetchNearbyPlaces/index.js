@@ -1,4 +1,3 @@
-const axios = require("axios");
 const { MongoClient } = require("mongodb");
 
 module.exports = async function (context, req) {
@@ -46,21 +45,25 @@ module.exports = async function (context, req) {
 
     for (const [categoria, categoriaId] of Object.entries(categoriaMap)) {
       context.log(`Buscando '${categoria}' no Azure Maps...`);
-      const response = await axios.get("https://atlas.microsoft.com/search/poi/json", {
-        params: {
-          "subscription-key": mapsKey,
-          "api-version": "1.0",
-          "lat": lat,
-          "lon": lon,
-          "radius": radius,
-          "query": categoria.toLowerCase(),
-          "limit": 10
-        }
-      });
 
-      context.log(` ${categoria}: ${response.data.results.length} encontrados`);
+      const url = new URL("https://atlas.microsoft.com/search/poi/json");
+      url.searchParams.set("subscription-key", mapsKey);
+      url.searchParams.set("api-version", "1.0");
+      url.searchParams.set("lat", lat);
+      url.searchParams.set("lon", lon);
+      url.searchParams.set("radius", radius);
+      url.searchParams.set("query", categoria.toLowerCase());
+      url.searchParams.set("limit", 10);
 
-      const locais = response.data.results.map(poi => ({
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Erro na chamada ao Azure Maps: ${response.statusText}`);
+      }
+      const data = await response.json();
+
+      context.log(`${categoria}: ${data.results.length} encontrados`);
+
+      const locais = data.results.map(poi => ({
         nome: poi.poi.name,
         coords: {
           type: "Point",
@@ -90,12 +93,15 @@ module.exports = async function (context, req) {
 
     await client.close();
     context.res = { status: 200, body: "Locais adicionados com sucesso." };
+
   } catch (err) {
-    context.log.error("ERRO INTERNO:", err.message);
-    context.log.error(err.stack);
+    context.log.error("ERRO INTERNO DETETADO");
+    context.log.error("Mensagem:", err.message || "sem mensagem");
+    context.log.error("Stacktrace:", err.stack || "sem stack");
+
     context.res = {
       status: 500,
-      body: "Erro interno: " + err.message
+      body: "Erro interno: " + (err.message || "desconhecido")
     };
   }
 };
