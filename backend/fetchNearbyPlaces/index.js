@@ -1,80 +1,111 @@
 const { MongoClient } = require("mongodb");
-const { BlobServiceClient } = require("@azure/storage-blob");
 
-navigator.geolocation.getCurrentPosition(pos => {
-  const lat = pos.coords.latitude;
-  const lon = pos.coords.longitude;
+module.exports = async function (context, req) {
+  try {
+    const { lat, lon } = req.query;
 
-  fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
-    .then(() => fetch("https://urbangeist-function.azurewebsites.net/api/locais"))
-    .then(res => res.json())
-    .then(locais => mostrarNoMapa(locais, [lon, lat])); // passa coords do utilizador
-});
+    context.log("Parâmetros recebidos:", lat, lon);
 
-let map, dataSource;
-
-function mostrarNoMapa(locais, userCoords) {
-  console.log("🗺️ Locais recebidos:", locais);
-
-  map = new atlas.Map("mapa", {
-    center: userCoords,
-    zoom: 13,
-    authOptions: {
-      authType: "subscriptionKey",
-      subscriptionKey: "AZURE_MAPS_KEY substituída dinamicamente no HTML"
+    if (!lat || !lon) {
+      context.res = {
+        status: 400,
+        body: "Parâmetros 'lat' e 'lon' são obrigatórios."
+      };
+      return;
     }
-  });
 
-  map.events.add("ready", () => {
-    // Adicionar ícone personalizado da localização
-    map.imageSprite.add("user-pin", "https://atlas.microsoft.com/images/pin-round-red.png").then(() => {
-      const userPoint = new atlas.data.Feature(new atlas.data.Point(userCoords));
-      const userSource = new atlas.source.DataSource();
-      userSource.add(userPoint);
-      map.sources.add(userSource);
-      map.layers.add(new atlas.layer.SymbolLayer(userSource, null, {
-        iconOptions: {
-          image: "user-pin",
-          size: 1,
-          anchor: "center"
-        }
-      }));
-    });
+    const mapsKey = process.env.AZURE_MAPS_KEY;
+    const mongoUri = process.env.COSMOSDB_CONN_STRING;
 
-    const userSource = new atlas.source.DataSource();
-    userSource.add(userPoint);
-    map.sources.add(userSource);
+    if (!mapsKey || !mongoUri) {
+      context.log.error("Variáveis de ambiente ausentes!");
+      context.res = {
+        status: 500,
+        body: "AZURE_MAPS_KEY ou COSMOSDB_CONN_STRING não definidas."
+      };
+      return;
+    }
 
-    map.layers.add(new atlas.layer.SymbolLayer(userSource, null, {
-      iconOptions: {
-        image: "pin-round-red",
-        allowOverlap: true
+    const radius = 20000;
+
+    const categoriaMap = {
+      "Lazer": "1",
+      "Eventos": "2",
+      "Cultura": "3",
+      "Natureza": "4",
+      "Culinária": "5"
+    };
+
+    context.log("Ligando ao MongoDB...");
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    const db = client.db("urbangeist");
+    const col = db.collection("tb_local");
+    context.log("Ligado ao MongoDB");
+
+    for (const [categoria, categoriaId] of Object.entries(categoriaMap)) {
+      context.log(`Buscando '${categoria}' no Azure Maps...`);
+
+      const url = new URL("https://atlas.microsoft.com/search/poi/json");
+      url.searchParams.set("subscription-key", mapsKey);
+      url.searchParams.set("api-version", "1.0");
+      url.searchParams.set("lat", lat);
+      url.searchParams.set("lon", lon);
+      url.searchParams.set("radius", radius);
+      url.searchParams.set("query", categoria.toLowerCase());
+      url.searchParams.set("limit", 10);
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Erro na chamada ao Azure Maps: ${response.statusText}`);
       }
-    }));
+      const data = await response.json();
 
-    // Criar lista e pins dos locais
-    const lista = document.getElementById("lista-locais");
-    lista.innerHTML = "";
+      context.log(`${categoria}: ${data.results.length} encontrados`);
 
-    locais.forEach(loc => {
-      const [lon, lat] = loc.coords.coordinates;
-      dataSource.add(new atlas.data.Feature(new atlas.data.Point([lon, lat])));
+      const locais = data.results.map(poi => ({
+        nome: poi.poi.name,
+        coords: {
+          type: "Point",
+          coordinates: [poi.position.lon, poi.position.lat]
+        },
+        categoriaId,
+        tipo: categoria,
+        tags: poi.poi.categories || [],
+        info: poi.poi.classifications?.map(c => c.code).join(", ") || "",
+        imagem: "https://via.placeholder.com/150"
+      }));
 
-      const card = document.createElement("div");
-      card.className = "local-card";
+      for (const local of locais) {
+        const existe = await col.findOne({
+          nome: local.nome,
+          "coords.coordinates": local.coords.coordinates
+        });
 
-      const img = document.createElement("img");
-      img.src = loc.imagemThumbnail || loc.imagem || "https://placehold.co/150x100";
-      img.alt = loc.nome;
-      img.className = "thumb";
+        if (!existe) {
+          await col.insertOne(local);
+          context.log(`Inserido: ${local.nome}`);
+        } else {
+          context.log(`Já existe: ${local.nome}`);
+        }
+      }
+    }
 
-      const info = document.createElement("div");
-      info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
+    await client.close();
+    context.res = {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+      body: { mensagem: "Locais adicionados com sucesso." }
+    };
 
-      card.appendChild(img);
-      card.appendChild(info);
-      lista.appendChild(card);
-    });
-  });
-}
+  } catch (err) {
+    context.log.error("ERRO INTERNO DETETADO");
+    context.log.error("Mensagem:", err.message || "sem mensagem");
+    context.log.error("Stacktrace:", err.stack || "sem stack");
+
+    context.res = {
+      status: 500,
+      body: "Erro interno: " + (err.message || "desconhecido")
+    };
+  }
+};
