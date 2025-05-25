@@ -27,16 +27,21 @@ function mostrarNoMapa(locais, userCoords) {
   });
 
   map.events.add("ready", () => {
-    dataSource = new atlas.source.DataSource();
-    map.sources.add(dataSource);
-
-    // Camada principal para os locais
-    map.layers.add(new atlas.layer.SymbolLayer(dataSource));
-
-    // Adicionar localização do utilizador com ponto vermelho
-    const userPoint = new atlas.data.Feature(new atlas.data.Point(userCoords), {
-      color: "red"
+    // Adicionar ícone personalizado da localização
+    map.imageSprite.add("user-pin", "https://atlas.microsoft.com/images/pin-round-red.png").then(() => {
+      const userPoint = new atlas.data.Feature(new atlas.data.Point(userCoords));
+      const userSource = new atlas.source.DataSource();
+      userSource.add(userPoint);
+      map.sources.add(userSource);
+      map.layers.add(new atlas.layer.SymbolLayer(userSource, null, {
+        iconOptions: {
+          image: "user-pin",
+          size: 1,
+          anchor: "center"
+        }
+      }));
     });
+
     const userSource = new atlas.source.DataSource();
     userSource.add(userPoint);
     map.sources.add(userSource);
@@ -63,17 +68,6 @@ function mostrarNoMapa(locais, userCoords) {
       img.src = loc.imagemThumbnail || loc.imagem || "https://placehold.co/150x100";
       img.alt = loc.nome;
       img.className = "thumb";
-
-      img.onclick = () => {
-        const overlay = document.createElement("div");
-        overlay.className = "modal";
-        overlay.innerHTML = `
-          <div class="modal-content">
-            <img src="${loc.imagemOriginal || loc.imagem}" alt="${loc.nome}" />
-          </div>`;
-        overlay.onclick = () => overlay.remove();
-        document.body.appendChild(overlay);
-      };
 
       const info = document.createElement("div");
       info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
