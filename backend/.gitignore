@@ -16,6 +16,5 @@ yarn-error.log*
 local.settings.json
 
 # Pastas de build e cache (caso existam)
-dist/
 .tmp/
 .cache/
