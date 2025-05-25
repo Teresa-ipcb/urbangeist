@@ -60,7 +60,7 @@ nav
     border: #222831;
 }
 
-.top-container
+.top-container, .about-container
 {
     background-color: white;
     background-image: url("https://www.transparenttextures.com/patterns/green-dust-and-scratches.png");
