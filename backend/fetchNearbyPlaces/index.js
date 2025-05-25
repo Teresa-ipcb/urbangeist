@@ -92,7 +92,11 @@ module.exports = async function (context, req) {
     }
 
     await client.close();
-    context.res = { status: 200, body: "Locais adicionados com sucesso." };
+    context.res = {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+      body: { mensagem: "Locais adicionados com sucesso." }
+    };
 
   } catch (err) {
     context.log.error("ERRO INTERNO DETETADO");
