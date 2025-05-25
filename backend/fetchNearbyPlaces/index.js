@@ -1,6 +1,5 @@
 const { MongoClient } = require("mongodb");
 const { BlobServiceClient } = require("@azure/storage-blob");
-const { Readable } = require("stream");
 
 module.exports = async function (context, req) {
   try {
@@ -27,12 +26,10 @@ module.exports = async function (context, req) {
       "Culinária": "5"
     };
 
-    // Iniciar MongoDB
     const client = new MongoClient(mongoUri);
     await client.connect();
     const col = client.db("urbangeist").collection("tb_local");
 
-    // Iniciar Blob Storage
     const containerName = "imagens";
     const blobServiceClient = BlobServiceClient.fromConnectionString(blobConn);
     const containerClient = blobServiceClient.getContainerClient(containerName);
@@ -56,7 +53,8 @@ module.exports = async function (context, req) {
         const nome = poi.poi.name;
         const coords = [poi.position.lon, poi.position.lat];
         const filename = nome.replace(/\s/g, "_").toLowerCase() + ".jpg";
-        const imgURL = `https://via.placeholder.com/300?text=${encodeURIComponent(nome)}`;
+
+        const imgURL = `https://placehold.co/600x400?text=${encodeURIComponent(nome)}`;
 
         // Fazer download da imagem
         let blobUrl;
@@ -66,11 +64,11 @@ module.exports = async function (context, req) {
           const buffer = Buffer.from(arrayBuffer);
 
           const blockBlobClient = containerClient.getBlockBlobClient(filename);
-          await blockBlobClient.uploadData(buffer);
+          await blockBlobClient.uploadData(buffer, { overwrite: true });
           blobUrl = blockBlobClient.url;
         } catch (e) {
-          context.log(`Falha ao guardar imagem para ${nome}: ${e.message}`);
-          blobUrl = imgURL; // fallback
+          context.log(`Erro a guardar imagem de ${nome}: ${e.message}`);
+          blobUrl = imgURL;
         }
 
         const local = {
