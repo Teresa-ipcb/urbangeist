@@ -1,21 +1,31 @@
-navigator.geolocation.getCurrentPosition(pos => {
+navigator.geolocation.getCurrentPosition(async pos => {
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
 
-  console.log("TESTE");
-  console.log(lat);
-  
-  fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
-    .then(res => res.json())
-    .then(() => fetch("https://urbangeist-function.azurewebsites.net/api/locais"))
-    .then(res => res.json())
-    .then(mostrarNoMapa);
+  try {
+    // Buscar chave do Azure Maps a partir do backend
+    const keyRes = await fetch("https://urbangeist-function.azurewebsites.net/api/getAzureMapsKey");
+    const keyData = await keyRes.json();
+    const azureMapsKey = keyData.key;
+
+    // Fetch locais próximos
+    await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`);
+
+    // Obter locais guardados
+    const locaisRes = await fetch("https://urbangeist-function.azurewebsites.net/api/locais");
+    const locais = await locaisRes.json();
+
+    // Mostrar no mapa
+    mostrarNoMapa(locais, azureMapsKey);
+  } catch (err) {
+    console.error("Erro ao carregar dados ou mapa:", err);
+  }
 });
 
 let map, dataSource;
 
-function mostrarNoMapa(locais) {
-  console.log("🗺️ Locais recebidos:", locais);
+function mostrarNoMapa(locais, azureMapsKey) {
+  console.log("Locais recebidos:", locais);
 
   const center = locais.length > 0
     ? locais[0].coords.coordinates
@@ -26,7 +36,7 @@ function mostrarNoMapa(locais) {
     zoom: 12,
     authOptions: {
       authType: "subscriptionKey",
-      subscriptionKey: "AZURE_MAPS_KEY substituída dinamicamente no HTML"
+      subscriptionKey: azureMapsKey 
     }
   });
 
@@ -50,7 +60,6 @@ function mostrarNoMapa(locais) {
       img.alt = loc.nome;
       img.className = "thumb";
 
-      // Aumentar imagem ao clicar
       img.onclick = () => {
         const overlay = document.createElement("div");
         overlay.className = "modal";
