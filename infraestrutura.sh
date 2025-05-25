@@ -9,6 +9,7 @@ BD_NAME="urbangeist"
 STORAGE_ACCOUNT="urbangeiststorage"
 FUNCTION_APP="urbangeist-function"
 AZURE_MAPS_ACCOUNT="urbangeist-maps"
+CONTAINER_NAME="imagens"
 
 # Criar Resource Group
 az group create --name $RESOURCE_GROUP --location $LOCATION
@@ -57,6 +58,17 @@ az storage account create --name $STORAGE_ACCOUNT \
                           --resource-group $RESOURCE_GROUP \
                           --sku Standard_LRS
 
+
+STORAGE_KEY=$(az storage account keys list --account-name $STORAGE_ACCOUNT \
+                                           --resource-group $RESOURCE_GROUP \
+                                           --query '[0].value' -o tsv)
+
+# Criar o container
+az storage container create --name $CONTAINER_NAME \
+                            --account-name $STORAGE_ACCOUNT \
+                            --account-key $STORAGE_KEY \
+                            --public-access blob
+
 # Criar Azure Function App
 az functionapp create --resource-group $RESOURCE_GROUP \
                       --consumption-plan-location $LOCATION \
@@ -91,6 +103,7 @@ STORAGE_CONN_STRING=$(az storage account show-connection-string --name $STORAGE_
                                                                 --resource-group $RESOURCE_GROUP \
                                                                 --query connectionString \
                                                                 --output tsv)
+                                                                
 
 # Definir variáveis de ambiente para App Service
 az webapp config appsettings set --name $APP_NAME \
