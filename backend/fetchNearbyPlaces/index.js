@@ -1,33 +1,24 @@
 const { MongoClient } = require("mongodb");
+const { BlobServiceClient } = require("@azure/storage-blob");
+const { Readable } = require("stream");
 
 module.exports = async function (context, req) {
   try {
     const { lat, lon } = req.query;
-
-    context.log("Parâmetros recebidos:", lat, lon);
-
     if (!lat || !lon) {
-      context.res = {
-        status: 400,
-        body: "Parâmetros 'lat' e 'lon' são obrigatórios."
-      };
+      context.res = { status: 400, body: "Parâmetros 'lat' e 'lon' são obrigatórios." };
       return;
     }
 
     const mapsKey = process.env.AZURE_MAPS_KEY;
     const mongoUri = process.env.COSMOSDB_CONN_STRING;
-
-    if (!mapsKey || !mongoUri) {
-      context.log.error("Variáveis de ambiente ausentes!");
-      context.res = {
-        status: 500,
-        body: "AZURE_MAPS_KEY ou COSMOSDB_CONN_STRING não definidas."
-      };
+    const blobConn = process.env.BLOB_CONN_STRING;
+    if (!mapsKey || !mongoUri || !blobConn) {
+      context.res = { status: 500, body: "Variáveis de ambiente em falta." };
       return;
     }
 
     const radius = 20000;
-
     const categoriaMap = {
       "Lazer": "1",
       "Eventos": "2",
@@ -36,16 +27,18 @@ module.exports = async function (context, req) {
       "Culinária": "5"
     };
 
-    context.log("Ligando ao MongoDB...");
+    // Iniciar MongoDB
     const client = new MongoClient(mongoUri);
     await client.connect();
-    const db = client.db("urbangeist");
-    const col = db.collection("tb_local");
-    context.log("Ligado ao MongoDB");
+    const col = client.db("urbangeist").collection("tb_local");
+
+    // Iniciar Blob Storage
+    const containerName = "imagens";
+    const blobServiceClient = BlobServiceClient.fromConnectionString(blobConn);
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+    await containerClient.createIfNotExists();
 
     for (const [categoria, categoriaId] of Object.entries(categoriaMap)) {
-      context.log(`Buscando '${categoria}' no Azure Maps...`);
-
       const url = new URL("https://atlas.microsoft.com/search/poi/json");
       url.searchParams.set("subscription-key", mapsKey);
       url.searchParams.set("api-version", "1.0");
@@ -55,28 +48,44 @@ module.exports = async function (context, req) {
       url.searchParams.set("query", categoria.toLowerCase());
       url.searchParams.set("limit", 10);
 
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Erro na chamada ao Azure Maps: ${response.statusText}`);
-      }
-      const data = await response.json();
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Erro ao chamar Azure Maps: " + res.statusText);
+      const data = await res.json();
 
-      context.log(`${categoria}: ${data.results.length} encontrados`);
+      for (const poi of data.results) {
+        const nome = poi.poi.name;
+        const coords = [poi.position.lon, poi.position.lat];
+        const filename = nome.replace(/\s/g, "_").toLowerCase() + ".jpg";
+        const imgURL = `https://via.placeholder.com/300?text=${encodeURIComponent(nome)}`;
 
-      const locais = data.results.map(poi => ({
-        nome: poi.poi.name,
-        coords: {
-          type: "Point",
-          coordinates: [poi.position.lon, poi.position.lat]
-        },
-        categoriaId,
-        tipo: categoria,
-        tags: poi.poi.categories || [],
-        info: poi.poi.classifications?.map(c => c.code).join(", ") || "",
-        imagem: "https://via.placeholder.com/150"
-      }));
+        // Fazer download da imagem
+        let blobUrl;
+        try {
+          const imgRes = await fetch(imgURL);
+          const arrayBuffer = await imgRes.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
 
-      for (const local of locais) {
+          const blockBlobClient = containerClient.getBlockBlobClient(filename);
+          await blockBlobClient.uploadData(buffer);
+          blobUrl = blockBlobClient.url;
+        } catch (e) {
+          context.log(`Falha ao guardar imagem para ${nome}: ${e.message}`);
+          blobUrl = imgURL; // fallback
+        }
+
+        const local = {
+          nome,
+          coords: {
+            type: "Point",
+            coordinates: coords
+          },
+          categoriaId,
+          tipo: categoria,
+          tags: poi.poi.categories || [],
+          info: poi.poi.classifications?.map(c => c.code).join(", ") || "",
+          imagem: blobUrl
+        };
+
         const existe = await col.findOne({
           nome: local.nome,
           "coords.coordinates": local.coords.coordinates
@@ -95,17 +104,14 @@ module.exports = async function (context, req) {
     context.res = {
       status: 200,
       headers: { "Content-Type": "application/json" },
-      body: { mensagem: "Locais adicionados com sucesso." }
+      body: { mensagem: "Locais adicionados com imagens!" }
     };
 
   } catch (err) {
-    context.log.error("ERRO INTERNO DETETADO");
-    context.log.error("Mensagem:", err.message || "sem mensagem");
-    context.log.error("Stacktrace:", err.stack || "sem stack");
-
+    context.log("Erro:", err.message);
     context.res = {
       status: 500,
-      body: "Erro interno: " + (err.message || "desconhecido")
+      body: "Erro interno: " + err.message
     };
   }
 };
