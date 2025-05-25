@@ -7,7 +7,7 @@ navigator.geolocation.getCurrentPosition(pos => {
   
   fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`)
     .then(res => res.json())
-    .then(() => fetch("/api/locais"))
+    .then(() => fetch("https://urbangeist-function.azurewebsites.net/api/locais"))
     .then(res => res.json())
     .then(mostrarNoMapa);
 });
