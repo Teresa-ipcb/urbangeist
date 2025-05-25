@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Art</title>
+    <link rel="stylesheet" href="authentication.css">
+</head>
+
+<header class="header">
+    <nav>
+        <div class="nav-title">
+            <h2><a href="index.html">UrbanGeist <img src="images/map.png" class="header-imgs" alt="icon"></a></h2>
+        </div>
+        <div class="nav-links">
+            <ul>
+                <li><a href="authentication.html"><img src="images/perfil.png" class="header-imgs" alt="Perfil"></a></li>
+                <li>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Pesquisar locais, eventos...">
+                        <button id="searchBtn">🔍</button>
+                    </div>
+                </li>
+            </ul> 
+        </div>
+    </nav>
+    <hr>
+</header>
+
+    <div class="top-container">
+        <h2 id="purposeDescription">INICIAR SESSÃO</h2>
+
+        <div class="autenticacao">
+            <div id="div_login">
+                <main class="login-conteudo">
+                    <div class="login-conteudo-principal">
+                        <form class="login-conteudo-informacoes" method="post">
+                            <div class="login-conteudo-email">
+                                <label for="" id="login-conteudo-email-titulo" class="formElements">
+                                    Email:
+                                </label>
+                                <input type="email" name="" id="email" class="inputData formElements">
+                            </div>
+
+                            <div class="login-conteudo-password">
+                                <label for="" id="login-conteudo-password-titulo" class="formElements">
+                                    Password:
+                                </label>
+                                <input type="password" name="" id="password" class="inputData formElements">
+                            </div>
+
+                            <div class="login-conteudo-botoes">
+                                <input type="button" value="Entrar" id="btn_login">
+                            </div>
+
+                            <p id="output"></p>
+
+                        </form>
+                    </div>
+                </main>
+            </div>
+
+            <div id="div_new">
+                <div class="register">
+                    <h2 id="novo">Novo Cliente?</h2>
+
+                    <div class="registerData">
+                        <form class="login-conteudo-informacoes" method="post">
+                            <div class="login-conteudo-nome">
+                                <label for="" class="formElements" id="login-conteudo-nome-titulo">
+                                    Nome: *
+                                </label>
+                                <input type="text" name="" id="pNome" class="inputData formElements" required>
+                            </div>
+            
+                            <div class="login-conteudo-email">
+                                <label for="" id="login-conteudo-email-titulo" class="formElements">
+                                    Email: *
+                                </label>
+                                <input type="email" name="" id="emailR" class="inputData formElements" required>
+                            </div>
+            
+                            <div class="login-conteudo-password">
+                                <label for="" id="login-conteudo-password-titulo" class="formElements">
+                                    Password: *
+                                </label>
+                                <input type="password" name="" id="passwordR" class="inputData formElements" required>
+                            </div>
+            
+                            <div class="login-conteudo-botoes">
+                                <input type="button" value="Criar" id="btn_criar">
+                            </div>
+            
+                        </form>
+            
+                        <p id="output"></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="perfil-info">
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        <h4>UrbanGeist</h4>
+        <p id="direitos">© 2025 UrbanGeist, Todos os direitos reservados</p>
+        <div class="nav-footer">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">Sobre Nós</a></li>
+            </ul>
+        </div>   
+    </footer>
+
+    <!-- Mover o script para o final do body -->
+    <script src="authentication.js"></script>
+</body>
+
+</html>

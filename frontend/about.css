@@ -1,0 +1,159 @@
+/*Body e div*/
+*
+{
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0
+}
+
+body
+{
+    background-color: #222831;
+    background-image: url(textures/green-dust-and-scratches.png);
+}
+
+.footer
+{
+    align-items: center;
+    background-color: #222831;
+    background-image: url(textures/green-dust-and-scratches.png);
+    padding-bottom: 50px; 
+    padding-top: 95px;
+}
+
+.header
+{
+    background-color: #222831;
+    background-image: url(textures/green-dust-and-scratches.png);
+    height: 6vh;
+    overflow: hidden;
+    padding-bottom: 38px;
+    padding-top: 20px;
+    position: relative;
+    width: 100%;
+}
+
+.about-container
+{
+    background-color: #ffffff;
+    background-image: url(textures/green-dust-and-scratches.png); 
+    margin-left: 100px;
+    margin-right: 100px;
+    padding-bottom: 10%;
+}
+
+nav
+{
+    align-items: center;
+    display: flex;
+    margin: 20px auto;
+    position: sticky;
+    width: 80%;
+    z-index: 1;
+}
+
+.nav-links
+{
+    flex: 1;
+    text-align: right;
+}
+
+.nav-title
+{
+    color: #ffffff; 
+    flex-basis: 20%;
+}
+
+
+
+/*Imagens*/
+img.perfil, img.pesquisa, img.carrinho
+{  
+    margin-right: 20px;    
+    width: 17px;
+}
+
+
+
+/*Linhas*/
+hr
+{
+    background-color: #ffffff;   
+    border-color: #ffffff;
+    margin: 0 auto;
+    margin-top: -15px;
+    width: 82%;
+}
+
+
+
+/*Listas*/
+.nav-footer ul
+{
+    flex: 1;
+    text-align: center;
+}
+
+.nav-links ul li, .nav-footer ul li
+{
+    display: inline-block;
+    list-style: none;
+    margin: 0 20px;
+}
+
+.nav-links ul li a, .nav-footer ul li a
+{
+    color: #ffffff;
+    text-decoration: none;
+}
+
+
+
+/*Outros*/
+::-webkit-scrollbar 
+{
+    display: none;
+}
+
+
+
+/*Texto*/
+#direitos
+{
+    color: #ffffff;
+    font-size: x-small;
+    left: -1px;
+    position: relative;
+    text-align: center;
+    top: 2px;
+}
+
+h2
+{
+    color: #222831;
+    font-size: 164%;
+    padding-bottom: 6%;
+    padding-top: 5%;
+    text-align: center;
+}
+
+h3
+{
+    color: #ffffff;  
+    margin-right: 0;
+    position: relative;
+    top: 3px;
+}
+
+h4
+{
+    color: #ffffff;
+    text-align: center;
+}
+
+p
+{
+    font-size: 120%;
+    margin-bottom: 4px;
+    text-align: center;
+}
