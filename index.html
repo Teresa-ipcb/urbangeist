@@ -1,35 +1,54 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt">
 <head>
-  <meta charset="UTF-8">
-  <title>UrbanGeist</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" />
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    #mapa { height: 400px; }
-    #lista-locais { padding: 1em; display: flex; flex-wrap: wrap; gap: 1em; }
-    .local-card { width: 200px; border: 1px solid #ccc; padding: 10px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .thumb { width: 100%; cursor: pointer; border-radius: 4px; transition: transform 0.2s; }
-    .thumb:hover { transform: scale(1.05); }
-
-    .modal {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center;
-    }
-    .modal-content img {
-      max-width: 90vw;
-      max-height: 90vh;
-      border-radius: 12px;
-      box-shadow: 0 0 20px black;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanGeist</title>
+    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" />
 </head>
 <body>
-  <div id="mapa"></div>
-  <div id="lista-locais"></div>
+    <header class="header">
+        <nav>
+            <div class="nav-title">
+                <h2><a href="">UrbanGeist <img src="images/map.png" class="header-imgs" alt="icon"></a></h2>
+            </div>
+            <div class="nav-links">
+                <ul>
+                    <li><a href="authentication.html"><img src="images/perfil.png" class="header-imgs" alt="Perfil"></a></li>
+                </ul> 
+            </div>
+        </nav>
+        <hr>
+    </header>
 
-  <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
-  <script src="script.js"></script>
+    <main class="middle-container" id="explora">
+        <div id="mapa"></div>
+
+        <div id="filtros">
+            <button data-categoria="Todos" class="filtro ativo">Todos</button>
+            
+            <div class="view-toggle">
+                <button id="modo-lista" title="Ver em lista">☰</button>
+                <button id="modo-grelha" title="Ver em grelha">▤</button>
+            </div>
+        </div>
+
+        <div id="lista-locais" class="modo-grelha"></div>
+    </main>
+
+    <footer class="footer">
+        <h4>UrbanGeist</h4>
+        <p id="direitos">© 2025 UrbanGeist, Todos os direitos reservados</p>
+        <div class="nav-footer">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">Sobre Nós</a></li>
+            </ul>
+        </div>   
+    </footer>
+
+    <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
