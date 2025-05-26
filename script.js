@@ -75,6 +75,7 @@ async function carregarDadosComLocalizacao(pos) {
     mostrarErro("Erro ao carregar dados. Por favor, recarregue a página.");
   }
 }
+}
 
 
 // Função para lidar com erros de geolocalização
