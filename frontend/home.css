@@ -133,7 +133,7 @@ hr {
   cursor: pointer;
 }
 
-.btn-view.active {
+.btn-view.ativo {
   background-color: #555; 
   color: white;
   font-weight: bold;
