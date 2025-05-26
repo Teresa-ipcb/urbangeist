@@ -40,7 +40,6 @@ function alternarModoVisualizacao(e) {
 
 // Carrega dados com a localização do usuário
 async function carregarDadosComLocalizacao(pos) {
-  async function carregarDadosComLocalizacao(pos) {
   const userLat = pos.coords.latitude;
   const userLon = pos.coords.longitude;
 
@@ -52,14 +51,18 @@ async function carregarDadosComLocalizacao(pos) {
       fetch("https://urbangeist-function.azurewebsites.net/api/categorias")
     ]);
 
-    // Tratar possíveis erros nas respostas
-    if (!keyRes.ok || !locaisProximosRes.ok || !categoriasRes.ok) {
-      throw new Error("Erro ao carregar dados da API");
-    }
+    // Verificar se as respostas são válidas
+    if (!keyRes.ok) throw new Error("Falha ao obter chave do Azure Maps");
+    if (!locaisProximosRes.ok) throw new Error("Falha ao obter locais próximos");
+    if (!categoriasRes.ok) throw new Error("Falha ao obter categorias");
 
     const keyData = await keyRes.json();
-    locais = await locaisProximosRes.json(); // Agora só locais próximos
+    locais = await locaisProximosRes.json();
     categorias = await categoriasRes.json();
+
+    // Debug: verificar dados recebidos
+    console.log("Locais recebidos:", locais);
+    console.log("Categorias recebidas:", categorias);
 
     // Verificar se há locais
     if (locais.length === 0) {
@@ -70,17 +73,29 @@ async function carregarDadosComLocalizacao(pos) {
     inicializarMapa(locais, keyData.key, userLat, userLon);
     carregarFiltros(categorias);
     aplicarFiltro('todos');
+
   } catch (err) {
     console.error("Erro ao carregar dados:", err);
     mostrarErro("Erro ao carregar dados. Por favor, recarregue a página.");
   }
 }
-}
-
 
 // Função para lidar com erros de geolocalização
 function handleErroGeolocalizacao(err) {
   console.error("Erro de geolocalização:", err);
+  mostrarErro("Não foi possível obter sua localização. Verifique as permissões.", "warning");
+}
+
+// Mostra mensagens de erro/aviso
+function mostrarErro(mensagem, tipo = 'error') {
+  const container = document.createElement('div');
+  container.className = `mensagem-flutuante ${tipo}`;
+  container.textContent = mensagem;
+  document.body.appendChild(container);
+
+  setTimeout(() => {
+    container.remove();
+  }, 5000);
 }
 
 // Inicializa o mapa Azure Maps
