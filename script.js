@@ -42,6 +42,7 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   map.events.add("ready", () => {
     dataSource = new atlas.source.DataSource();
     map.sources.add(dataSource);
+    dataSource.clear();
 
     // Camada de ícones
     map.layers.add(new atlas.layer.SymbolLayer(dataSource, null, {
@@ -66,7 +67,6 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
       }
     });
 
-    dataSource.clear();
     const lista = document.getElementById("lista-locais");
     lista.innerHTML = "";
 
