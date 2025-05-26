@@ -51,12 +51,12 @@ async function carregarDadosComLocalizacao(pos) {
 
     await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`);
     const locaisRes = await fetch("https://urbangeist-function.azurewebsites.net/api/locais");
-    let locais = await locaisRes.json();
+    locais = await locaisRes.json();
 
     // Garantir que locais é um array
     if (!Array.isArray(locais)) {
       console.error("Dados de locais inválidos:", locais);
-      locais = []; // Forçar array vazio
+      //locais = []; // Forçar array vazio
     }
 
     const keyData = await keyRes.json();
@@ -214,6 +214,8 @@ function aplicarFiltro(categoriaId) {
   });
 
   // Filtrar locais
+  console.log("TESTE");
+  console.log(locais);
   const locaisFiltrados = categoriaId === 'todos' 
     ? locais 
     : locais.filter(local => local.categoria === categoriaId);
@@ -224,6 +226,7 @@ function aplicarFiltro(categoriaId) {
 
 // Atualiza a visualização dos locais
 function atualizarVistaLocais(locaisParaMostrar = []) {
+  console.log(locaisParaMostrar);
   const container = document.getElementById('lista-locais');
   
   // Garantir que é um array
