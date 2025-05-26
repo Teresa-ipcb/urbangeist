@@ -160,47 +160,77 @@ hr {
     font-size: 14px;
 }
 
-#local-selecionado {
-  margin: 20px auto;
-  padding: 15px;
-  max-width: 900px;
-  background-color: #f7f7f7;
-  border: 2px solid #ddd;
-  border-radius: 10px;
+
+.local-detalhes-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100%;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.local-detaljes h2 {
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.detalhes-section {
+  margin: 20px 0;
+}
+
+.detalhes-section h3 {
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.avaliacoes {
   display: flex;
   align-items: center;
-  gap: 15px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  gap: 10px;
 }
 
-.local-detalhes-card img.thumb {
-  width: 150px;
-  height: auto;
-  border-radius: 8px;
+.avaliacao-media {
+  color: #FFD700; /* Cor das estrelas */
+  font-size: 1.2em;
 }
 
-.local-detalhes-card h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.5rem;
-}
-
-.local-detalhes-card p {
-  margin: 4px 0;
-}
-
-.local-detalhes-card button {
+.feedback-buttons {
+  display: flex;
+  gap: 10px;
   margin-top: 10px;
-  margin-right: 8px;
-  padding: 6px 10px;
-  background-color: #ffffff;
-  border: 1px solid #999;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.2s;
 }
 
-.local-detalhes-card button:hover {
-  background-color: #eaeaea;
+.feedback-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.feedback-btn.positivo {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.feedback-btn.negativo {
+  background-color: #f44336;
+  color: white;
+}
+
+.fechar-btn {
+  margin-top: 20px;
+  padding: 8px 15px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 
