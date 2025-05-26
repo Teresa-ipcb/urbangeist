@@ -42,9 +42,8 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   map.events.add("ready", () => {
     dataSource = new atlas.source.DataSource();
     map.sources.add(dataSource);
-    dataSource.clear();
 
-    // Adicionar ícones personalizados
+    // Primeiro carregue os ícones necessários
     map.imageSprite.add([
       {
         id: "pin-blue",
@@ -59,8 +58,11 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
     ]).then(() => {
       console.log("Ícones carregados com sucesso");
       
-      // Camada de ícones
-      map.layers.add(new atlas.layer.SymbolLayer(dataSource, null, {
+      // Limpe o datasource APÓS carregar os ícones
+      dataSource.clear();
+
+      // Adicione a camada de símbolos
+      const symbolLayer = new atlas.layer.SymbolLayer(dataSource, null, {
         iconOptions: {
           image: ['get', 'icon'],
           allowOverlap: true
@@ -69,72 +71,80 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
           textField: ['get', 'title'],
           offset: [0, 1.2]
         }
-      }));
+      });
+      map.layers.add(symbolLayer);
 
-      // Clique em marcador
-      map.events.add("click", dataSource, e => {
+      // Adicione os marcadores
+      adicionarMarcadores(locais, userLat, userLon);
+
+      // Configure o evento de clique
+      map.events.add("click", symbolLayer, e => {
         if (e.shapes && e.shapes.length > 0) {
           const props = e.shapes[0].getProperties();
+          console.log("Propriedades do marcador clicado:", props);
           if (props && props.nome) {
             mostrarDetalhesDoLocal(props);
           }
         }
       });
 
-      const lista = document.getElementById("lista-locais");
-      lista.innerHTML = "";
-
-      // Localização atual
-      dataSource.add(new atlas.data.Feature(
-      new atlas.data.Point([userLon, userLat]),
-        { title: "Você está aqui", icon: "pin-round-red" }
-      ));
-
-      // Locais
-      locais.forEach(loc => {
-        console.log("Verificando local:", loc);
-        
-        if (!loc.coords || !loc.coords.coordinates) {
-          console.warn("Local sem coordenadas:", loc.nome);
-          return;
-        }
-        
-        const [lon, lat] = loc.coords.coordinates;
-        if (lon == null || lat == null) return;
-        
-        const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
-          ...loc,
-          title: loc.nome,
-          icon: "pin-blue"
-        });
-        dataSource.add(feature);
-
-        // Criar card
-        const card = document.createElement("div");
-        card.className = "local-card";
-        const img = document.createElement("img");
-        img.src = loc.imagemThumbnail || loc.imagem || "https://via.placeholder.com/150";
-        img.alt = loc.nome;
-        img.className = "thumb";
-        img.onclick = () => {
-          const overlay = document.createElement("div");
-          overlay.className = "modal";
-          overlay.innerHTML = `<div class="modal-content"><img src="${loc.imagemOriginal || loc.imagem}" alt="${loc.nome}" /></div>`;
-          overlay.onclick = () => overlay.remove();
-          document.body.appendChild(overlay);
-        };
-        const info = document.createElement("div");
-        info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
-        card.appendChild(img);
-        card.appendChild(info);
-        lista.appendChild(card);
-      });
     }).catch(err => {
-    console.error("Erro ao carregar ícones:", err);
+      console.error("Erro ao carregar ícones:", err);
     });
   });
 }
 
+function adicionarMarcadores(locais, userLat, userLon) {
+  const lista = document.getElementById("lista-locais");
+  lista.innerHTML = "";
+
+  // Adicionar localização do usuário
+  dataSource.add(new atlas.data.Feature(
+    new atlas.data.Point([userLon, userLat]),
+    { 
+      title: "Você está aqui", 
+      icon: "pin-round-red" 
+    }
+  ));
+
+  // Adicionar locais
+  locais.forEach(loc => {
+    if (!loc.coords || !loc.coords.coordinates) {
+      console.warn("Local sem coordenadas:", loc.nome);
+      return;
+    }
+    
+    const [lon, lat] = loc.coords.coordinates;
+    if (lon == null || lat == null) return;
+    
+    const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
+      ...loc,  // Isso espalha todas as propriedades do local
+      title: loc.nome,
+      icon: "pin-blue"
+    });
+    dataSource.add(feature);
+
+    // Criar card na lista
+    const card = document.createElement("div");
+    card.className = "local-card";
+    const img = document.createElement("img");
+    img.src = loc.imagemThumbnail || loc.imagem || "https://via.placeholder.com/150";
+    img.alt = loc.nome;
+    img.className = "thumb";
+    img.onclick = () => {
+      const overlay = document.createElement("div");
+      overlay.className = "modal";
+      overlay.innerHTML = `<div class="modal-content"><img src="${loc.imagemOriginal || loc.imagem}" alt="${loc.nome}" /></div>`;
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+    };
+    const info = document.createElement("div");
+    info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
+    card.appendChild(img);
+    card.appendChild(info);
+    lista.appendChild(card);
+  });
+}
 
 function mostrarDetalhesDoLocal(local) {
   let container = document.getElementById("local-selecionado");
@@ -143,7 +153,11 @@ function mostrarDetalhesDoLocal(local) {
     container = document.createElement("div");
     container.id = "local-selecionado";
     const filtros = document.getElementById("filtros");
-    filtros.parentNode.insertBefore(container, filtros);
+    if (filtros && filtros.parentNode) {
+      filtros.parentNode.insertBefore(container, filtros);
+    } else {
+      document.body.appendChild(container);
+    }
   }
 
   container.style.display = "block";
