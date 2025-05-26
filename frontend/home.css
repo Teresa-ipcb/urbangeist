@@ -160,6 +160,50 @@ hr {
     font-size: 14px;
 }
 
+#local-selecionado {
+  margin: 20px auto;
+  padding: 15px;
+  max-width: 900px;
+  background-color: #f7f7f7;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.local-detalhes-card img.thumb {
+  width: 150px;
+  height: auto;
+  border-radius: 8px;
+}
+
+.local-detalhes-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+}
+
+.local-detalhes-card p {
+  margin: 4px 0;
+}
+
+.local-detalhes-card button {
+  margin-top: 10px;
+  margin-right: 8px;
+  padding: 6px 10px;
+  background-color: #ffffff;
+  border: 1px solid #999;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.local-detalhes-card button:hover {
+  background-color: #eaeaea;
+}
+
+
 /* Footer */
 .footer {
     text-align: center;
