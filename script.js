@@ -263,37 +263,30 @@ function atualizarMarcadoresNoMapa(locaisParaMostrar) {
   if (!dataSource) return;
 
   // Obter todos os features atuais
-  const features = dataSource.getShapes();
+  const shapes = dataSource.getShapes();
   
   // Atualizar propriedade de visibilidade
-  features.forEach(feature => {
-    const props = feature.getProperties();
+  shapes.forEach(shape => {
+    const props = shape.getProperties();
     if (props.type === 'place') {
       const visivel = filtroAtivo === 'todos' || 
                      locaisParaMostrar.some(l => l._id === props._id);
-      feature.setProperty('visible', visivel);
+      shape.addProperty('visible', visivel);
     }
   });
 
   // Atualizar datasource
-  dataSource.setShapes(features);
+  map.sources.add(dataSource);
 }
 
 // Mostra os detalhes de um local
 function mostrarDetalhesLocal(local) {
-  let container = document.getElementById("local-selecionado");
-
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "local-selecionado";
-    container.className = "local-detalhes-container";
-    document.body.appendChild(container);
-  }
+  const container = document.getElementById('local-selecionado');
+  if (!container) return;
 
   container.innerHTML = `
-    <div class="local-detalhes">
+    <div class="detalhes-conteudo">
       <button class="fechar-btn" onclick="fecharDetalhes()">×</button>
-      
       <h2>${local.nome || "Local Desconhecido"}</h2>
       
       <div class="detalhes-section">
@@ -324,30 +317,19 @@ function mostrarDetalhesLocal(local) {
     </div>
   `;
   
-  container.style.display = "block";
+  container.style.display = 'block';
   
-  // Adicionar eventos aos botões de feedback
+  // Configurar eventos
+  container.querySelector('.fechar-btn').addEventListener('click', () => {
+    container.style.display = 'none';
+  });
+
   document.querySelectorAll('.feedback-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const tipo = this.classList.contains('positivo') ? 'positivo' : 'negativo';
       enviarFeedback(local.nome, tipo);
     });
   });
-  
-  // Evento do botão de favorito
-  container.querySelector('.btn-favorito').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleFavorito(local._id);
-  });
-  
-  // Se houver coordenadas, centralizar no mapa
-  if (local.coords?.coordinates) {
-    const [lon, lat] = local.coords.coordinates;
-    map.setCamera({
-      center: [lon, lat],
-      zoom: 15
-    });
-  }
 }
 
 // Gerencia favoritos
