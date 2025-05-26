@@ -51,23 +51,20 @@ async function carregarDadosComLocalizacao(pos) {
       fetch("https://urbangeist-function.azurewebsites.net/api/categorias")
     ]);
 
-    // Verificar se as respostas são válidas
-    if (!keyRes.ok) throw new Error("Falha ao obter chave do Azure Maps");
-    if (!locaisProximosRes.ok) throw new Error("Falha ao obter locais próximos");
-    if (!categoriasRes.ok) throw new Error("Falha ao obter categorias");
-
+    // Verificar e parsear respostas
     const keyData = await keyRes.json();
-    locais = await locaisProximosRes.json();
-    categorias = await categoriasRes.json();
+    let locais = await locaisProximosRes.json();
+    const categorias = await categoriasRes.json();
 
-    // Debug: verificar dados recebidos
-    console.log("Locais recebidos:", locais);
-    console.log("Categorias recebidas:", categorias);
-
-    // Verificar se há locais
-    if (locais.length === 0) {
-      mostrarErro("Nenhum local encontrado na sua área. Tente ampliar sua busca.", "info");
+    // Garantir que locais é um array
+    if (!Array.isArray(locais)) {
+      console.error("Dados de locais inválidos:", locais);
+      locais = []; // Forçar array vazio
     }
+
+    // Debug: verificar dados
+    console.log("Locais recebidos:", locais);
+    console.log("Formato do primeiro local:", locais[0]);
 
     // Inicializar componentes
     inicializarMapa(locais, keyData.key, userLat, userLon);
@@ -76,26 +73,14 @@ async function carregarDadosComLocalizacao(pos) {
 
   } catch (err) {
     console.error("Erro ao carregar dados:", err);
-    mostrarErro("Erro ao carregar dados. Por favor, recarregue a página.");
+    mostrarErro("Erro ao carregar locais próximos. Tente novamente.");
   }
 }
+
 
 // Função para lidar com erros de geolocalização
 function handleErroGeolocalizacao(err) {
   console.error("Erro de geolocalização:", err);
-  mostrarErro("Não foi possível obter sua localização. Verifique as permissões.", "warning");
-}
-
-// Mostra mensagens de erro/aviso
-function mostrarErro(mensagem, tipo = 'error') {
-  const container = document.createElement('div');
-  container.className = `mensagem-flutuante ${tipo}`;
-  container.textContent = mensagem;
-  document.body.appendChild(container);
-
-  setTimeout(() => {
-    container.remove();
-  }, 5000);
 }
 
 // Inicializa o mapa Azure Maps
@@ -239,18 +224,23 @@ function aplicarFiltro(categoriaId) {
 }
 
 // Atualiza a visualização dos locais
-function atualizarVistaLocais(locais) {
+function atualizarVistaLocais(locaisParaMostrar = []) {
   const container = document.getElementById('lista-locais');
   
-  // Se não houver locais, mostrar mensagem
-  if (locais.length === 0) {
-    container.innerHTML = '<p class="sem-resultados">Nenhum local encontrado com este filtro.</p>';
+  // Garantir que é um array
+  if (!Array.isArray(locaisParaMostrar)) {
+    console.error("locaisParaMostrar não é array:", locaisParaMostrar);
+    locaisParaMostrar = [];
+  }
+
+  if (locaisParaMostrar.length === 0) {
+    container.innerHTML = '<p class="sem-resultados">Nenhum local encontrado.</p>';
     return;
   }
 
   container.innerHTML = '';
 
-  locais.forEach(local => {
+  locaisParaMostrar.forEach(local => {
     const card = document.createElement('div');
     card.className = 'local-card';
     card.innerHTML = `
