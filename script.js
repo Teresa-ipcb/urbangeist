@@ -8,7 +8,7 @@ navigator.geolocation.getCurrentPosition(async pos => {
     const keyData = await keyRes.json();
     const azureMapsKey = keyData.key;
 
-    // Fetch locais próximos
+    // Buscar locais próximos
     await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`);
 
     // Obter locais guardados
@@ -16,7 +16,7 @@ navigator.geolocation.getCurrentPosition(async pos => {
     const locais = await locaisRes.json();
 
     // Mostrar no mapa
-    mostrarNoMapa(locais, azureMapsKey);
+    mostrarNoMapa(locais, azureMapsKey, lat, lon);
   } catch (err) {
     console.error("Erro ao carregar dados ou mapa:", err);
   }
@@ -24,16 +24,12 @@ navigator.geolocation.getCurrentPosition(async pos => {
 
 let map, dataSource;
 
-function mostrarNoMapa(locais, azureMapsKey) {
+function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   console.log("Locais recebidos:", locais);
 
-  const center = locais.length > 0
-    ? locais[0].coords.coordinates
-    : [-7.497, 40.283];
-
   map = new atlas.Map("mapa", {
-    center: center,
-    zoom: 12,
+    center: [userLon, userLat], // Usar localização atual como centro
+    zoom: 13,
     authOptions: {
       authType: "subscriptionKey",
       subscriptionKey: azureMapsKey 
@@ -47,9 +43,15 @@ function mostrarNoMapa(locais, azureMapsKey) {
 
     const lista = document.getElementById("lista-locais");
     lista.innerHTML = "";
+    dataSource.clear();
 
-    dataSource.clear(); //limpar as marcações da localização gps antiga
+    // Marcar localização do utilizador com um ponto vermelho
+    const userLocation = new atlas.data.Feature(new atlas.data.Point([userLon, userLat]), {
+      icon: "pin-red"
+    });
+    dataSource.add(userLocation);
 
+    // Adicionar marcadores dos locais
     locais.forEach(loc => {
       const [lon, lat] = loc.coords.coordinates;
       dataSource.add(new atlas.data.Feature(new atlas.data.Point([lon, lat])));
