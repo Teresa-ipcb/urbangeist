@@ -9,7 +9,7 @@ navigator.geolocation.getCurrentPosition(
       const keyData = await keyRes.json();
       const azureMapsKey = keyData.key;
 
-      // Fetch locais próximos e depois todos os locais
+      // Buscar locais próximos e todos os locais guardados
       await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`);
       const locaisRes = await fetch("https://urbangeist-function.azurewebsites.net/api/locais");
       const locais = await locaisRes.json();
@@ -55,6 +55,7 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
       }
     }));
 
+    // Evento de clique em marcador
     map.events.add("click", dataSource, e => {
       if (e.shapes && e.shapes.length > 0) {
         const shape = e.shapes[0];
@@ -72,22 +73,21 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
     // 🔴 Marcar localização atual
     const userLocation = new atlas.data.Feature(new atlas.data.Point([userLon, userLat]), {
       title: "Você está aqui",
-      icon: "pin-round-red"
+      icon: "marker-red"
     });
     dataSource.add(userLocation);
 
-    // 🗺️ Adicionar marcadores dos locais
+    // 🗺️ Adicionar locais
     locais.forEach(loc => {
       const [lon, lat] = loc.coords.coordinates;
-      const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]),
-      {
-        ...loc, // adiciona tudo do local como propriedades
+      const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
+        ...loc,
         title: loc.nome,
-        icon: "pin-blue"
+        icon: "marker"
       });
       dataSource.add(feature);
 
-      // Criar card na interface
+      // Criar card da lista
       const card = document.createElement("div");
       card.className = "local-card";
 
@@ -117,7 +117,15 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
 }
 
 function mostrarDetalhesDoLocal(local) {
-  const container = document.getElementById("local-selecionado");
+  let container = document.getElementById("local-selecionado");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "local-selecionado";
+    const filtros = document.getElementById("filtros");
+    filtros.parentNode.insertBefore(container, filtros);
+  }
+
   container.style.display = "block";
   container.innerHTML = `
     <div class="local-detalhes-card">
