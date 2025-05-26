@@ -60,7 +60,7 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
       console.log("Ícones carregados com sucesso");
       
       // Limpe o datasource APÓS carregar os ícones
-      dataSource.clear();
+      //dataSource.clear();
 
       // Adicione a camada de símbolos
       const symbolLayer = new atlas.layer.SymbolLayer(dataSource, null, {
