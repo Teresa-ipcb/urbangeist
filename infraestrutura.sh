@@ -122,7 +122,7 @@ az functionapp config appsettings set --name $FUNCTION_APP \
 # Adicionar permissões CORS
 az functionapp cors add --name $FUNCTION_APP \
 			--resource-group $RESOURCE_GROUP \
-			--origin https://urbangeist-app.azurewebsites.net
+			--allowed-origins https://urbangeist-app.azurewebsites.net
 
 
 # Ligar App Service ao GitHub para CI/CD
