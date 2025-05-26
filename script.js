@@ -129,28 +129,67 @@ function atualizarListaLocais(locais) {
   });
 }
 
-function mostrarDetalhes(local) {
-  const container = document.getElementById('local-selecionado') || criarContainerDetalhes();
+function mostrarDetalhesDoLocal(local) {
+  let container = document.getElementById("local-selecionado");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "local-selecionado";
+    container.className = "local-detalhes-container";
+    document.body.appendChild(container);
+  }
+
   container.innerHTML = `
     <div class="local-detalhes">
-      <h2>${local.nome}</h2>
-      <img src="${local.imagemOriginal || local.imagem}" alt="${local.nome}">
-      <p>${local.info || 'Sem descrição disponível.'}</p>
-      <button onclick="fecharDetalhes()">Fechar</button>
+      <h2>${local.nome || "Local Desconhecido"}</h2>
+      
+      <div class="detalhes-section">
+        <h3>Localização</h3>
+        <p>${local.endereco || "Endereço não disponível"}</p>
+      </div>
+      
+      <div class="detalhes-section">
+        <h3>Descrição do Local</h3>
+        <p>${local.descricao || local.info || "Sem descrição disponível."}</p>
+      </div>
+      
+      <div class="detalhes-section">
+        <h3>Avaliações</h3>
+        <div class="avaliacoes">
+          <span class="avaliacao-media">★★★★☆</span>
+          <span class="total-avaliacoes">(32 avaliações)</span>
+        </div>
+      </div>
+      
+      <div class="feedback-section">
+        <h3>Indicar se foi uma boa recomendação</h3>
+        <div class="feedback-buttons">
+          <button class="feedback-btn positivo">👍 Sim</button>
+          <button class="feedback-btn negativo">👎 Não</button>
+        </div>
+      </div>
+      
+      <button class="fechar-btn" onclick="fecharDetalhes()">Fechar</button>
     </div>
   `;
-  container.style.display = 'block';
-}
-
-function criarContainerDetalhes() {
-  const container = document.createElement('div');
-  container.id = 'local-selecionado';
-  container.style.display = 'none';
-  document.body.appendChild(container);
-  return container;
+  
+  container.style.display = "block";
+  
+  // Adicionar eventos aos botões de feedback
+  document.querySelectorAll('.feedback-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tipo = this.classList.contains('positivo') ? 'positivo' : 'negativo';
+      enviarFeedback(local.nome, tipo);
+    });
+  });
 }
 
 function fecharDetalhes() {
-  const container = document.getElementById('local-selecionado');
-  if (container) container.style.display = 'none';
+  const container = document.getElementById("local-selecionado");
+  if (container) container.style.display = "none";
+}
+
+function enviarFeedback(nomeLocal, tipo) {
+  console.log(`Feedback ${tipo} para ${nomeLocal}`);
+  //adicionar info na bd
 }
