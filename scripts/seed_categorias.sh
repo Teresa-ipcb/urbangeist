@@ -56,7 +56,8 @@ echo "Script concluído com sucesso."
 
 echo "A publicar Azure Functions para o Azure..."
 
-cd "$(dirname "$0")/../backend"
-func azure functionapp publish urbangeist-function
+cd ..
+cd backend
+func azure functionapp publish urbangeist-function --force --javascript
 
-cd "$(dirname "$0")
+cd ..
