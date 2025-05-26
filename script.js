@@ -48,6 +48,8 @@ function mostrarNoMapa(locais, azureMapsKey) {
     const lista = document.getElementById("lista-locais");
     lista.innerHTML = "";
 
+    dataSource.clear(); //limpar as marcações da localização gps antiga
+
     locais.forEach(loc => {
       const [lon, lat] = loc.coords.coordinates;
       dataSource.add(new atlas.data.Feature(new atlas.data.Point([lon, lat])));
