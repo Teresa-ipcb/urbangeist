@@ -4,6 +4,7 @@ let locais = [];
 let categorias = [];
 let modoVisualizacao = 'grelha'; // padrão: 'grelha' ou 'lista'
 let filtroAtivo = 'todos';
+let previousCameraState = null;
 
 // Inicialização quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', async () => {
@@ -344,6 +345,18 @@ function mostrarDetalhesLocal(local) {
       enviarFeedback(local.nome, tipo);
     });
   });
+
+  // Guardar o estado atual do mapa antes de mudar
+  previousCameraState = map.getCamera();
+
+  // Se houver coordenadas, centralizar no mapa
+  if (local.coords?.coordinates) {
+    const [lon, lat] = local.coords.coordinates;
+    map.setCamera({
+      center: [lon, lat],
+      zoom: 15
+    });
+  }
 }
 
 // Gerencia favoritos
@@ -363,6 +376,10 @@ function toggleFavorito(localId) {
 function fecharDetalhes() {
   const container = document.getElementById("local-selecionado");
   if (container) container.style.display = "none";
+
+  if (previousCameraState) {
+    map.setCamera(previousCameraState);
+  }
 }
 
 function enviarFeedback(nomeLocal, tipo) {
