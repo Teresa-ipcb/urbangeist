@@ -213,12 +213,10 @@ function aplicarFiltro(categoriaId) {
     btn.classList.toggle('ativo', btn.dataset.categoria === categoriaId);
   });
 
-  // Filtrar locais
-  console.log("TESTE");
-  console.log(locais);
+  // Filtrar locais - verifique a propriedade correta (categoriaId ou categoria)
   const locaisFiltrados = categoriaId === 'todos' 
     ? locais 
-    : locais.filter(local => local.categoria === categoriaId);
+    : locais.filter(local => local.categoriaId === categoriaId || local.categoria === categoriaId);
 
   atualizarVistaLocais(locaisFiltrados);
   atualizarMarcadoresNoMapa(locaisFiltrados);
@@ -265,21 +263,34 @@ function atualizarVistaLocais(locaisParaMostrar = []) {
 function atualizarMarcadoresNoMapa(locaisParaMostrar) {
   if (!dataSource) return;
 
-  // Obter todos os features atuais
+  // Limpar todos os shapes existentes
+  dataSource.clear();
+
+  // Adicionar localização do usuário novamente
   const shapes = dataSource.getShapes();
-  
-  // Atualizar propriedade de visibilidade
-  shapes.forEach(shape => {
-    const props = shape.getProperties();
-    if (props.type === 'place') {
-      const visivel = filtroAtivo === 'todos' || 
-                     locaisParaMostrar.some(l => l._id === props._id);
-      shape.addProperty('visible', visivel);
+  const userLocation = shapes.find(s => s.getProperties().type === 'user-location');
+  if (userLocation) {
+    dataSource.add(userLocation);
+  }
+
+  // Adicionar apenas os locais visíveis
+  locaisParaMostrar.forEach(local => {
+    if (local.coords?.coordinates) {
+      const [lon, lat] = local.coords.coordinates;
+      dataSource.add(new atlas.data.Feature(
+        new atlas.data.Point([lon, lat]),
+        { 
+          ...local,
+          title: local.nome,
+          icon: "pin-blue",
+          type: "place"
+        }
+      ));
     }
   });
 
-  // Atualizar datasource
-  map.sources.add(dataSource);
+  // Não é necessário adicionar a fonte novamente ao mapa -> só notificar a fonte de dados que foi atualizada
+  dataSource.setShapes(dataSource.getShapes());
 }
 
 // Mostra os detalhes de um local
