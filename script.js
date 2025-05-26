@@ -44,23 +44,23 @@ async function carregarDadosComLocalizacao(pos) {
   const userLon = pos.coords.longitude;
 
   try {
-    // Buscar dados em paralelo
-    const [keyRes, locaisProximosRes, categoriasRes] = await Promise.all([
+    const [keyRes, categoriasRes] = await Promise.all([
       fetch("https://urbangeist-function.azurewebsites.net/api/getAzureMapsKey"),
-      fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`),
       fetch("https://urbangeist-function.azurewebsites.net/api/categorias")
     ]);
 
-    // Verificar e parsear respostas
-    const keyData = await keyRes.json();
-    let locais = await locaisProximosRes.json();
-    const categorias = await categoriasRes.json();
+    await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`);
+    const locaisRes = await fetch("https://urbangeist-function.azurewebsites.net/api/locais");
+    let locais = await locaisRes.json();
 
     // Garantir que locais é um array
     if (!Array.isArray(locais)) {
       console.error("Dados de locais inválidos:", locais);
       locais = []; // Forçar array vazio
     }
+
+    const keyData = await keyRes.json();
+    const categorias = await categoriasRes.json();
 
     // Debug: verificar dados
     console.log("Locais recebidos:", locais);
