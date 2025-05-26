@@ -119,11 +119,24 @@ hr {
   gap: 5px;
 }
 
-.view-toggle button {
+/*.view-toggle button {
   background: none;
   border: 1px solid #ddd;
   padding: 5px 10px;
   cursor: pointer;
+}*/
+
+.btn-view {
+  background: none;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.btn-view.active {
+  background-color: #555; 
+  color: white;
+  font-weight: bold;
 }
 
 /* Lista de locais */
