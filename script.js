@@ -15,10 +15,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       carregarDadosComLocalizacao,
+      handleErroGeolocalizacao,
       { enableHighAccuracy: true, timeout: 10000 }
     );
   } else {
-    alert("Geolocalização não suportada pelo navegador.");
+    alert("Geolocalização não suportada pelo navegador. Usando localização padrão.");
   }
 });
 
@@ -70,7 +71,14 @@ async function carregarDadosComLocalizacao(pos) {
 
   } catch (err) {
     console.error("Erro ao carregar dados:", err);
+    mostrarErro("Erro ao carregar dados. Por favor, recarregue a página.");
   }
+}
+
+
+// Função para lidar com erros de geolocalização
+function handleErroGeolocalizacao(err) {
+  console.error("Erro de geolocalização:", err);
 }
 
 // Inicializa o mapa Azure Maps
