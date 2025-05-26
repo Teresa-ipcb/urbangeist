@@ -129,7 +129,7 @@ function atualizarListaLocais(locais) {
   });
 }
 
-function mostrarDetalhesDoLocal(local) {
+function mostrarDetalhes(local) {
   let container = document.getElementById("local-selecionado");
 
   if (!container) {
