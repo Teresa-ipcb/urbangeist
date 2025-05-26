@@ -116,8 +116,14 @@ az webapp config appsettings set --name $APP_NAME \
 az functionapp config appsettings set --name $FUNCTION_APP \
                                       --resource-group $RESOURCE_GROUP \
                                       --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
-												                         COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
+						 COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
                                                  AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" 
+
+# Adicionar permissões CORS
+az functionapp cors add --name $FUNCTION_APP \
+			--resource-group $RESOURCE_GROUP \
+			--origin https://urbangeist-app.azurewebsites.net
+
 
 # Ligar App Service ao GitHub para CI/CD
 az webapp deployment source config --name $APP_NAME \
@@ -132,9 +138,9 @@ cd scripts
 npm install mongodb@3.7 > /dev/null 2>&1
 cd ..
 		
-# Parte final do infraestrutura.sh
-chmod +x scripts/seed_categorias.sh
-#chmod +x scripts/fetch_locais.sh
 
+chmod +x scripts/seed_categorias.sh
 ./scripts/seed_categorias.sh
-#./scripts/fetch_locais.sh
+
+#chmod +x scripts/fetch_locais.sh #usado para teste local sem gps
+#./scripts/fetch_locais.sh 
