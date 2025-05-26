@@ -108,25 +108,30 @@ function inicializarMapa(locais, azureMapsKey, userLat, userLon) {
   });
 }
 
-function carregarFiltros() {
+function carregarFiltros(categorias) {
   const containerFiltros = document.getElementById('filtros');
   
-  // Adicionar botão "Todos" primeiro
+  // Limpa filtros existentes (exceto o toggle view)
+  const viewToggle = containerFiltros.querySelector('.view-toggle');
+  containerFiltros.innerHTML = '';
+  containerFiltros.appendChild(viewToggle);
+
+  // Adiciona botão "Todos" primeiro
   const btnTodos = document.createElement('button');
   btnTodos.textContent = 'Todos';
   btnTodos.className = 'filtro ativo';
-  btnTodos.dataset.categoria = 'Todos';
+  btnTodos.dataset.categoria = 'todos';
   btnTodos.addEventListener('click', filtrarLocais);
-  containerFiltros.insertBefore(btnTodos, containerFiltros.querySelector('.view-toggle'));
+  containerFiltros.prepend(btnTodos);
 
-  // Adicionar categorias da BD
-  categorias.forEach(categoria => {
+  // Adiciona categorias da BD
+  categorias.forEach(cat => {
     const btn = document.createElement('button');
-    btn.textContent = categoria.nome;
+    btn.textContent = cat.nome;
     btn.className = 'filtro';
-    btn.dataset.categoria = categoria._id;
+    btn.dataset.categoria = cat._id;
     btn.addEventListener('click', filtrarLocais);
-    containerFiltros.insertBefore(btn, containerFiltros.querySelector('.view-toggle'));
+    containerFiltros.insertBefore(btn, viewToggle);
   });
 }
 
