@@ -131,6 +131,7 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
       });
     }).catch(err => {
     console.error("Erro ao carregar ícones:", err);
+    });
   });
 }
 
