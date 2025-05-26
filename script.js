@@ -130,7 +130,7 @@ function atualizarListaLocais(locais) {
 }
 
 function mostrarDetalhes(local) {
-  let container = document.getElementById("local-selecionado");
+    let container = document.getElementById("local-selecionado");
 
   if (!container) {
     container = document.createElement("div");
@@ -141,6 +141,8 @@ function mostrarDetalhes(local) {
 
   container.innerHTML = `
     <div class="local-detalhes">
+      <button class="fechar-btn" onclick="fecharDetalhes()">×</button>
+      
       <h2>${local.nome || "Local Desconhecido"}</h2>
       
       <div class="detalhes-section">
@@ -168,8 +170,6 @@ function mostrarDetalhes(local) {
           <button class="feedback-btn negativo">👎 Não</button>
         </div>
       </div>
-      
-      <button class="fechar-btn" onclick="fecharDetalhes()">Fechar</button>
     </div>
   `;
   
