@@ -58,6 +58,10 @@ echo "A publicar Azure Functions para o Azure..."
 
 cd ..
 cd backend
+# Instalar dependências
+npm install
+
+# Publicar function app
 func azure functionapp publish urbangeist-function --force --javascript
 
 cd ..
