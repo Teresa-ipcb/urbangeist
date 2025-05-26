@@ -42,79 +42,90 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   map.events.add("ready", () => {
     dataSource = new atlas.source.DataSource();
     map.sources.add(dataSource);
+
     dataSource.clear();
 
-    // Camada de ícones
-    map.layers.add(new atlas.layer.SymbolLayer(dataSource, null, {
-      iconOptions: {
-        image: ['get', 'icon'],
-        allowOverlap: true
+    // Adicionar ícones personalizados
+    map.imageSprite.add([
+      {
+        id: "pin-blue",
+        url: "https://atlas.microsoft.com/images/poi_pin_blue.png",
+        size: [24, 24]
       },
-      textOptions: {
-        textField: ['get', 'title'],
-        offset: [0, 1.2]
+      {
+        id: "pin-round-red",
+        url: "https://atlas.microsoft.com/images/poi_pin_red.png",
+        size: [24, 24]
       }
-    }));
-
-    // Evento de clique em marcador
-    map.events.add("click", dataSource, e => {
-      if (e.shapes && e.shapes.length > 0) {
-        const shape = e.shapes[0];
-        const props = shape.getProperties();
-        if (props && props.nome) {
-          mostrarDetalhesDoLocal(props);
+    ]).then(() => {
+      // Camada de ícones
+      map.layers.add(new atlas.layer.SymbolLayer(dataSource, null, {
+        iconOptions: {
+          image: ['get', 'icon'],
+          allowOverlap: true
+        },
+        textOptions: {
+          textField: ['get', 'title'],
+          offset: [0, 1.2]
         }
-      }
-    });
+      }));
 
-    const lista = document.getElementById("lista-locais");
-    lista.innerHTML = "";
-
-    // 🔴 Marcar localização atual
-    const userLocation = new atlas.data.Feature(new atlas.data.Point([userLon, userLat]), {
-      title: "Você está aqui",
-      icon: "marker-red"
-    });
-    dataSource.add(userLocation);
-
-    // 🗺️ Adicionar locais
-    locais.forEach(loc => {
-      const [lon, lat] = loc.coords.coordinates;
-      const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
-        ...loc,
-        title: loc.nome,
-        icon: "marker"
+      // Clique em marcador
+      map.events.add("click", dataSource, e => {
+        if (e.shapes && e.shapes.length > 0) {
+          const shape = e.shapes[0];
+          const props = shape.getProperties();
+          if (props && props.nome) {
+            mostrarDetalhesDoLocal(props);
+          }
+        }
       });
-      dataSource.add(feature);
 
-      // Criar card da lista
-      const card = document.createElement("div");
-      card.className = "local-card";
+      const lista = document.getElementById("lista-locais");
+      lista.innerHTML = "";
 
-      const img = document.createElement("img");
-      img.src = loc.imagemThumbnail || loc.imagem || "https://via.placeholder.com/150";
-      img.alt = loc.nome;
-      img.className = "thumb";
+      // Localização atual
+      const userLocation = new atlas.data.Feature(new atlas.data.Point([userLon, userLat]), {
+        title: "Você está aqui",
+        icon: "pin-round-red"
+      });
+      dataSource.add(userLocation);
 
-      img.onclick = () => {
-        const overlay = document.createElement("div");
-        overlay.className = "modal";
-        overlay.innerHTML = `
-          <div class="modal-content">
-            <img src="${loc.imagemOriginal || loc.imagem}" alt="${loc.nome}" />
-          </div>`;
-        overlay.onclick = () => overlay.remove();
-        document.body.appendChild(overlay);
-      };
+      // Locais
+      locais.forEach(loc => {
+        const [lon, lat] = loc.coords.coordinates;
+        if (lon == null || lat == null) return;
+        const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
+          ...loc,
+          title: loc.nome,
+          icon: "pin-blue"
+        });
+        dataSource.add(feature);
 
-      const info = document.createElement("div");
-      info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
-      card.appendChild(img);
-      card.appendChild(info);
-      lista.appendChild(card);
+        // Criar card
+        const card = document.createElement("div");
+        card.className = "local-card";
+        const img = document.createElement("img");
+        img.src = loc.imagemThumbnail || loc.imagem || "https://via.placeholder.com/150";
+        img.alt = loc.nome;
+        img.className = "thumb";
+        img.onclick = () => {
+          const overlay = document.createElement("div");
+          overlay.className = "modal";
+          overlay.innerHTML = `<div class="modal-content"><img src="${loc.imagemOriginal || loc.imagem}" alt="${loc.nome}" /></div>`;
+          overlay.onclick = () => overlay.remove();
+          document.body.appendChild(overlay);
+        };
+        const info = document.createElement("div");
+        info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
+        card.appendChild(img);
+        card.appendChild(info);
+        lista.appendChild(card);
+      });
     });
   });
 }
+
 
 function mostrarDetalhesDoLocal(local) {
   let container = document.getElementById("local-selecionado");
