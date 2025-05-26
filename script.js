@@ -40,35 +40,36 @@ function alternarModoVisualizacao(e) {
 
 // Carrega dados com a localização do usuário
 async function carregarDadosComLocalizacao(pos) {
+  async function carregarDadosComLocalizacao(pos) {
   const userLat = pos.coords.latitude;
   const userLon = pos.coords.longitude;
 
   try {
     // Buscar dados em paralelo
-    const [keyRes, locaisRes, categoriasRes] = await Promise.all([
+    const [keyRes, locaisProximosRes, categoriasRes] = await Promise.all([
       fetch("https://urbangeist-function.azurewebsites.net/api/getAzureMapsKey"),
-      fetch("https://urbangeist-function.azurewebsites.net/api/locais"),
+      fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`),
       fetch("https://urbangeist-function.azurewebsites.net/api/categorias")
     ]);
 
     // Tratar possíveis erros nas respostas
-    if (!keyRes.ok || !locaisRes.ok || !categoriasRes.ok) {
+    if (!keyRes.ok || !locaisProximosRes.ok || !categoriasRes.ok) {
       throw new Error("Erro ao carregar dados da API");
     }
 
     const keyData = await keyRes.json();
-    locais = await locaisRes.json();
+    locais = await locaisProximosRes.json(); // Agora só locais próximos
     categorias = await categoriasRes.json();
+
+    // Verificar se há locais
+    if (locais.length === 0) {
+      mostrarErro("Nenhum local encontrado na sua área. Tente ampliar sua busca.", "info");
+    }
 
     // Inicializar componentes
     inicializarMapa(locais, keyData.key, userLat, userLon);
     carregarFiltros(categorias);
-    aplicarFiltro('todos'); // Mostrar todos inicialmente
-
-    // Opcional: buscar locais próximos (sem esperar resposta)
-    fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`)
-      .catch(err => console.error("Erro ao buscar locais próximos:", err));
-
+    aplicarFiltro('todos');
   } catch (err) {
     console.error("Erro ao carregar dados:", err);
     mostrarErro("Erro ao carregar dados. Por favor, recarregue a página.");
@@ -174,6 +175,7 @@ function inicializarMapa(locais, azureMapsKey, userLat, userLon) {
 
 // Carrega os filtros de categoria
 function carregarFiltros(categorias) {
+  console.log(categorias);
   const containerFiltros = document.getElementById('filtros');
   
   // Limpa filtros existentes (exceto o toggle view)
@@ -274,36 +276,57 @@ function atualizarMarcadoresNoMapa(locaisParaMostrar) {
 
 // Mostra os detalhes de um local
 function mostrarDetalhesLocal(local) {
-  const container = document.getElementById('local-selecionado');
-  
+  let container = document.getElementById("local-selecionado");
+
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "local-selecionado";
+    container.className = "local-detalhes-container";
+    document.body.appendChild(container);
+  }
+
   container.innerHTML = `
-    <div class="detalhes-conteudo">
-      <button class="fechar-btn" aria-label="Fechar detalhes">×</button>
-      <h2>${local.nome}</h2>
-      <div class="detalhes-imagem-container">
-        <img src="${local.imagemOriginal || local.imagemThumbnail || 'https://via.placeholder.com/800x400?text=Sem+imagem'}" 
-             alt="${local.nome}" 
-             class="detalhes-imagem"
-             loading="lazy">
+    <div class="local-detalhes">
+      <button class="fechar-btn" onclick="fecharDetalhes()">×</button>
+      
+      <h2>${local.nome || "Local Desconhecido"}</h2>
+      
+      <div class="detalhes-section">
+        <h3>Localização</h3>
+        <p>${local.endereco || "Endereço não disponível"}</p>
       </div>
-      <div class="detalhes-info">
-        ${local.endereco ? `<p><strong>Localização:</strong> ${local.endereco}</p>` : ''}
-        ${local.descricao ? `<p><strong>Descrição:</strong> ${local.descricao}</p>` : ''}
-        ${local.horario ? `<p><strong>Horário:</strong> ${local.horario}</p>` : ''}
+      
+      <div class="detalhes-section">
+        <h3>Descrição do Local</h3>
+        <p>${local.descricao || local.info || "Sem descrição disponível."}</p>
       </div>
-      <div class="detalhes-acoes">
-        <button class="btn-favorito" data-local-id="${local._id}">
-          ❤️ Adicionar aos favoritos
-        </button>
+      
+      <div class="detalhes-section">
+        <h3>Avaliações</h3>
+        <div class="avaliacoes">
+          <span class="avaliacao-media">★★★★☆</span>
+          <span class="total-avaliacoes">(32 avaliações)</span>
+        </div>
+      </div>
+      
+      <div class="feedback-section">
+        <h3>Indicar se foi uma boa recomendação</h3>
+        <div class="feedback-buttons">
+          <button class="feedback-btn positivo">👍 Sim</button>
+          <button class="feedback-btn negativo">👎 Não</button>
+        </div>
       </div>
     </div>
   `;
   
-  container.style.display = 'block';
+  container.style.display = "block";
   
-  // Configurar eventos
-  container.querySelector('.fechar-btn').addEventListener('click', () => {
-    container.style.display = 'none';
+  // Adicionar eventos aos botões de feedback
+  document.querySelectorAll('.feedback-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tipo = this.classList.contains('positivo') ? 'positivo' : 'negativo';
+      enviarFeedback(local.nome, tipo);
+    });
   });
   
   // Evento do botão de favorito
@@ -334,4 +357,14 @@ function toggleFavorito(localId) {
     btn.textContent = '✅ Remover dos favoritos';
     // TODO: Adicionar aos favoritos no backend
   }
+}
+
+function fecharDetalhes() {
+  const container = document.getElementById("local-selecionado");
+  if (container) container.style.display = "none";
+}
+
+function enviarFeedback(nomeLocal, tipo) {
+  console.log(`Feedback ${tipo} para ${nomeLocal}`);
+  //adicionar info na bd
 }
