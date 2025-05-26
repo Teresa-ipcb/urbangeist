@@ -1,26 +1,29 @@
-navigator.geolocation.getCurrentPosition(async pos => {
-  const lat = pos.coords.latitude;
-  const lon = pos.coords.longitude;
+navigator.geolocation.getCurrentPosition(
+  async pos => {
+    const userLat = pos.coords.latitude;
+    const userLon = pos.coords.longitude;
 
-  try {
-    // Buscar chave do Azure Maps a partir do backend
-    const keyRes = await fetch("https://urbangeist-function.azurewebsites.net/api/getAzureMapsKey");
-    const keyData = await keyRes.json();
-    const azureMapsKey = keyData.key;
+    try {
+      // Buscar chave do Azure Maps a partir do backend
+      const keyRes = await fetch("https://urbangeist-function.azurewebsites.net/api/getAzureMapsKey");
+      const keyData = await keyRes.json();
+      const azureMapsKey = keyData.key;
 
-    // Buscar locais próximos
-    await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${lat}&lon=${lon}`);
+      // Fetch locais próximos e depois todos os locais
+      await fetch(`https://urbangeist-function.azurewebsites.net/api/fetchNearbyPlaces?lat=${userLat}&lon=${userLon}`);
+      const locaisRes = await fetch("https://urbangeist-function.azurewebsites.net/api/locais");
+      const locais = await locaisRes.json();
 
-    // Obter locais guardados
-    const locaisRes = await fetch("https://urbangeist-function.azurewebsites.net/api/locais");
-    const locais = await locaisRes.json();
-
-    // Mostrar no mapa
-    mostrarNoMapa(locais, azureMapsKey, lat, lon);
-  } catch (err) {
-    console.error("Erro ao carregar dados ou mapa:", err);
+      mostrarNoMapa(locais, azureMapsKey, userLat, userLon);
+    } catch (err) {
+      console.error("Erro ao carregar dados ou mapa:", err);
+    }
+  },
+  err => {
+    console.error("Erro ao obter localização:", err);
+    alert("Não foi possível aceder à sua localização. Verifique permissões do navegador.");
   }
-});
+);
 
 let map, dataSource;
 
@@ -28,34 +31,50 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   console.log("Locais recebidos:", locais);
 
   map = new atlas.Map("mapa", {
-    center: [userLon, userLat], // Usar localização atual como centro
+    center: [userLon, userLat],
     zoom: 13,
     authOptions: {
       authType: "subscriptionKey",
-      subscriptionKey: azureMapsKey 
+      subscriptionKey: azureMapsKey
     }
   });
 
   map.events.add("ready", () => {
     dataSource = new atlas.source.DataSource();
     map.sources.add(dataSource);
-    map.layers.add(new atlas.layer.SymbolLayer(dataSource));
 
+    // Camada de ícones
+    map.layers.add(new atlas.layer.SymbolLayer(dataSource, null, {
+      iconOptions: {
+        image: ['get', 'icon'],
+        allowOverlap: true
+      },
+      textOptions: {
+        textField: ['get', 'title'],
+        offset: [0, 1.2]
+      }
+    }));
+
+    dataSource.clear();
     const lista = document.getElementById("lista-locais");
     lista.innerHTML = "";
-    dataSource.clear();
 
-    // Marcar localização do utilizador com um ponto vermelho
+    // 🔴 Marcar localização atual
     const userLocation = new atlas.data.Feature(new atlas.data.Point([userLon, userLat]), {
-      icon: "pin-red"
+      title: "Você está aqui",
+      icon: "pin-round-red"
     });
     dataSource.add(userLocation);
 
-    // Adicionar marcadores dos locais
+    // 🗺️ Adicionar marcadores dos locais
     locais.forEach(loc => {
       const [lon, lat] = loc.coords.coordinates;
-      dataSource.add(new atlas.data.Feature(new atlas.data.Point([lon, lat])));
+      dataSource.add(new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
+        title: loc.nome,
+        icon: "pin-blue"
+      }));
 
+      // Criar card na interface
       const card = document.createElement("div");
       card.className = "local-card";
 
@@ -77,7 +96,6 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
 
       const info = document.createElement("div");
       info.innerHTML = `<h3>${loc.nome}</h3><p>${loc.info || ""}</p>`;
-
       card.appendChild(img);
       card.appendChild(info);
       lista.appendChild(card);
