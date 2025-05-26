@@ -73,7 +73,6 @@ async function carregarDadosComLocalizacao(pos) {
 
   } catch (err) {
     console.error("Erro ao carregar dados:", err);
-    mostrarErro("Erro ao carregar locais próximos. Tente novamente.");
   }
 }
 
