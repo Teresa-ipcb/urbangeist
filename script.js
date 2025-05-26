@@ -40,6 +40,7 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   });
 
   map.events.add("ready", () => {
+    console.log("teste");
     dataSource = new atlas.source.DataSource();
     map.sources.add(dataSource);
 
