@@ -42,7 +42,6 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
   map.events.add("ready", () => {
     dataSource = new atlas.source.DataSource();
     map.sources.add(dataSource);
-
     dataSource.clear();
 
     // Adicionar ícones personalizados
@@ -58,6 +57,8 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
         size: [24, 24]
       }
     ]).then(() => {
+      console.log("Ícones carregados com sucesso");
+      
       // Camada de ícones
       map.layers.add(new atlas.layer.SymbolLayer(dataSource, null, {
         iconOptions: {
@@ -73,8 +74,7 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
       // Clique em marcador
       map.events.add("click", dataSource, e => {
         if (e.shapes && e.shapes.length > 0) {
-          const shape = e.shapes[0];
-          const props = shape.getProperties();
+          const props = e.shapes[0].getProperties();
           if (props && props.nome) {
             mostrarDetalhesDoLocal(props);
           }
@@ -85,16 +85,23 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
       lista.innerHTML = "";
 
       // Localização atual
-      const userLocation = new atlas.data.Feature(new atlas.data.Point([userLon, userLat]), {
-        title: "Você está aqui",
-        icon: "pin-round-red"
-      });
-      dataSource.add(userLocation);
+      dataSource.add(new atlas.data.Feature(
+      new atlas.data.Point([userLon, userLat]),
+        { title: "Você está aqui", icon: "pin-round-red" }
+      ));
 
       // Locais
       locais.forEach(loc => {
+        console.log("Verificando local:", loc);
+        
+        if (!loc.coords || !loc.coords.coordinates) {
+          console.warn("Local sem coordenadas:", loc.nome);
+          return;
+        }
+        
         const [lon, lat] = loc.coords.coordinates;
         if (lon == null || lat == null) return;
+        
         const feature = new atlas.data.Feature(new atlas.data.Point([lon, lat]), {
           ...loc,
           title: loc.nome,
@@ -122,7 +129,8 @@ function mostrarNoMapa(locais, azureMapsKey, userLat, userLon) {
         card.appendChild(info);
         lista.appendChild(card);
       });
-    });
+    }).catch(err => {
+    console.error("Erro ao carregar ícones:", err);
   });
 }
 
