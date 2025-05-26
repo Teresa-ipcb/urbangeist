@@ -16,7 +16,7 @@ module.exports = async function (context, req) {
     await client.connect();
 
     const db = client.db("urbangeist");
-    const categorias = await collection("tb_categoria").find()
+    const categorias = await db.collection("tb_categoria").find()
       .project({ _id: 1, nome: 1 })
       .toArray();
 
