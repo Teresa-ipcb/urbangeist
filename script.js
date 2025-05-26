@@ -239,18 +239,18 @@ function aplicarFiltro(categoriaId) {
 }
 
 // Atualiza a visualização dos locais
-function atualizarVistaLocais(locaisParaMostrar = locais) {
+function atualizarVistaLocais(locais) {
   const container = document.getElementById('lista-locais');
   
   // Se não houver locais, mostrar mensagem
-  if (locaisParaMostrar.length === 0) {
+  if (locais.length === 0) {
     container.innerHTML = '<p class="sem-resultados">Nenhum local encontrado com este filtro.</p>';
     return;
   }
 
   container.innerHTML = '';
 
-  locaisParaMostrar.forEach(local => {
+  locais.forEach(local => {
     const card = document.createElement('div');
     card.className = 'local-card';
     card.innerHTML = `
