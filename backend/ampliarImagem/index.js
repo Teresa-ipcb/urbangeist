@@ -1,7 +1,6 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 const { BlobServiceClient } = require("@azure/storage-blob");
 const sharp = require("sharp");
-const axios = require("axios");
 
 const storageConnString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const mongoUri = process.env.COSMOSDB_CONN_STRING;
@@ -12,6 +11,12 @@ const containerThumbnail = "thumbnails";
 module.exports = async function (context, req) {
   if (!storageConnString || !mongoUri) {
     context.res = { status: 500, body: "Faltam variáveis de ambiente." };
+    return;
+  }
+
+  const id = req.query.id;
+  if (!id) {
+    context.res = { status: 400, body: "Parâmetro 'id' é obrigatório." };
     return;
   }
 
@@ -26,52 +31,56 @@ module.exports = async function (context, req) {
     const mongo = new MongoClient(mongoUri);
     await mongo.connect();
     const db = mongo.db("urbangeist");
-    const locais = await db.collection("tb_local").find().toArray();
 
-    const atualizados = [];
-
-    for (const local of locais) {
-      if (!local.imagem) continue;
-
-      const fileName = `${local._id}.jpg`;
-
-      // Faz download da imagem atual
-      const response = await axios.get(local.imagem, { responseType: 'arraybuffer' });
-      const originalBuffer = Buffer.from(response.data);
-
-      // Upload original
-      await containerClientOriginal.getBlockBlobClient(fileName).uploadData(originalBuffer);
-
-      // Criar miniatura
-      const thumbnailBuffer = await sharp(originalBuffer).resize(150).jpeg({ quality: 80 }).toBuffer();
-      await containerClientThumbnail.getBlockBlobClient(fileName).uploadData(thumbnailBuffer);
-
-      const urlOriginal = containerClientOriginal.getBlockBlobClient(fileName).url;
-      const urlThumbnail = containerClientThumbnail.getBlockBlobClient(fileName).url;
-
-      // Atualiza na BD (opcional)
-      await db.collection("tb_local").updateOne(
-        { _id: local._id },
-        { $set: { imagemOriginal: urlOriginal, imagemThumbnail: urlThumbnail } }
-      );
-
-      atualizados.push({ nome: local.nome, urlOriginal, urlThumbnail });
+    const local = await db.collection("tb_local").findOne({ _id: new ObjectId(id) });
+    if (!local || !local.imagem) {
+      context.res = { status: 404, body: "Local não encontrado ou sem imagem." };
+      return;
     }
+
+    const fileName = `${local._id}.jpg`;
+
+    // Substituir axios: usar fetch nativo
+    const response = await fetch(local.imagem);
+    if (!response.ok) {
+      throw new Error(`Erro ao fazer download da imagem: ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const originalBuffer = Buffer.from(arrayBuffer);
+
+    // Upload original
+    const originalBlobClient = containerClientOriginal.getBlockBlobClient(fileName);
+    await originalBlobClient.uploadData(originalBuffer, { overwrite: true });
+
+    // Criar miniatura
+    const thumbnailBuffer = await sharp(originalBuffer).resize(150).jpeg({ quality: 80 }).toBuffer();
+    const thumbnailBlobClient = containerClientThumbnail.getBlockBlobClient(fileName);
+    await thumbnailBlobClient.uploadData(thumbnailBuffer, { overwrite: true });
+
+    const urlOriginal = originalBlobClient.url;
+    const urlThumbnail = thumbnailBlobClient.url;
+
+    // Atualizar documento
+    await db.collection("tb_local").updateOne(
+      { _id: local._id },
+      { $set: { imagemOriginal: urlOriginal, imagemThumbnail: urlThumbnail } }
+    );
 
     await mongo.close();
 
     context.res = {
       status: 200,
       body: {
-        mensagem: `Miniaturas geradas para ${atualizados.length} locais.`,
-        locais: atualizados
+        mensagem: `Miniatura gerada para ${local.nome}`,
+        locais: [{ nome: local.nome, urlOriginal, urlThumbnail }]
       }
     };
   } catch (err) {
-    context.log.error("Erro:", err);
+    context.log.error("Erro ao gerar miniatura:", err);
     context.res = {
       status: 500,
-      body: "Erro ao gerar miniaturas: " + err.message
+      body: "Erro ao gerar miniatura: " + err.message
     };
   }
 };
