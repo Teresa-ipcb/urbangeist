@@ -11,6 +11,9 @@ FUNCTION_APP="urbangeist-function"
 AZURE_MAPS_ACCOUNT="urbangeist-maps"
 CONTAINER_NAME="imagens"
 
+# Pasta local com imagens default por tipo categoria
+DEFAULT_IMAGES_DIR="./frontend/images"
+
 # Criar Resource Group
 az group create --name $RESOURCE_GROUP --location $LOCATION
 
@@ -64,11 +67,28 @@ STORAGE_KEY=$(az storage account keys list --account-name $STORAGE_ACCOUNT \
                                            --resource-group $RESOURCE_GROUP \
                                            --query '[0].value' -o tsv)
 
-# Criar o container
 az storage container create --name $CONTAINER_NAME \
                             --account-name $STORAGE_ACCOUNT \
                             --account-key $STORAGE_KEY \
                             --public-access blob
+
+# Fazer upload de cada imagem default
+for img_path in $DEFAULT_IMAGES_DIR/*.jpg; do
+  filename=$(basename $img_path)
+  blob_name="default/$filename"
+  
+  echo "A fazer upload de $img_path como $blob_name..."
+
+  az storage blob upload \
+  --account-name $STORAGE_ACCOUNT \
+  --account-key $STORAGE_KEY \
+  --container-name $CONTAINER_NAME \
+  --name "$blob_name" \
+  --file "$img_path" \
+  --overwrite true
+done
+
+echo "Upload das imagens default concluído."
 
 # Criar Azure Function App
 az functionapp create --resource-group $RESOURCE_GROUP \
