@@ -302,6 +302,11 @@ function mostrarDetalhesLocal(local) {
   container.innerHTML = `
     <div class="detalhes-conteudo">
       <button class="fechar-btn" onclick="fecharDetalhes()">×</button>
+      <img src="${local.imagem}" 
+       data-id="${local._id}" 
+       onclick="ampliarImagem(this)" 
+       class="imagem-local">
+     
       <h2>${local.nome || "Local Desconhecido"}</h2>
       
       <div class="detalhes-section">
@@ -358,6 +363,32 @@ function mostrarDetalhesLocal(local) {
     });
   }
 }
+
+async function ampliarImagem(imgElement) {
+  const localId = imgElement.dataset.id;
+
+  try {
+    const res = await fetch(`https://urbangeist-function.azurewebsites.net/api/ampliarImagem?id=${localId}`);
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data?.mensagem || "Erro ao gerar imagem.");
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal';
+    overlay.innerHTML = `
+      <div class="modal-content">
+        <img src="${data.locais[0].urlOriginal}" alt="Imagem ampliada" class="imagem-ampliada">
+      </div>`;
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+  } catch (err) {
+    console.error("Erro ao ampliar imagem:", err);
+    alert("Não foi possível ampliar a imagem.");
+  }
+}
+
 
 // Gerencia favoritos
 function toggleFavorito(localId) {
