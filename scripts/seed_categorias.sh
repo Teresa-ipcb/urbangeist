@@ -5,6 +5,7 @@ npm install mongodb@3.7 > /dev/null 2>&1
 
 # Nome dos recursos
 RESOURCE_GROUP="urbangeist-rg"
+APP_NAME="urbangeist-app"
 COSMOSDB_NAME="urbangeist-db"
 
 # Obter string de conexão da CosmosDB
@@ -65,3 +66,11 @@ npm install
 func azure functionapp publish urbangeist-function --force --javascript
 
 cd ..
+
+# Liberar link aplicação
+APP_URL=$(az webapp show --name $APP_NAME \
+                       --resource-group $RESOURCE_GROUP \
+                       --query "defaultHostName" \
+                       --output tsv)
+
+echo "URL da aplicação: https://${APP_URL}"
