@@ -16,11 +16,11 @@ module.exports = async function (context, req) {
 
     const mapsKey = process.env.AZURE_MAPS_KEY;
     const mongoUri = process.env.COSMOSDB_CONN_STRING;
-    const blobConnStr = process.env.AZURE_STORAGE_CONNECTION_STRING;
+    const blobConn = process.env.AZURE_STORAGE_CONNECTION_STRING;
     const mapillaryToken = process.env.MAPILLARY_TOKEN;
-    const containerName = "imagens";
+    const blobContainer = "imagens";
 
-    if (!mapsKey || !mongoUri || !blobConnStr || !mapillaryToken) {
+    if (!mapsKey || !mongoUri || !blobConn || !mapillaryToken) {
       context.res = {
         status: 500,
         body: "Variáveis de ambiente ausentes."
@@ -29,6 +29,7 @@ module.exports = async function (context, req) {
     }
 
     const radius = 20000;
+
     const categoriaMap = {
       "Lazer": "1",
       "Eventos": "2",
@@ -42,8 +43,8 @@ module.exports = async function (context, req) {
     const db = client.db("urbangeist");
     const col = db.collection("tb_local");
 
-    const blobService = BlobServiceClient.fromConnectionString(blobConnStr);
-    const container = blobService.getContainerClient(containerName);
+    const blobClient = BlobServiceClient.fromConnectionString(blobConn);
+    const containerClient = blobClient.getContainerClient(blobContainer);
 
     for (const [categoria, categoriaId] of Object.entries(categoriaMap)) {
       const url = new URL("https://atlas.microsoft.com/search/poi/json");
@@ -56,77 +57,92 @@ module.exports = async function (context, req) {
       url.searchParams.set("limit", 10);
 
       const response = await fetch(url);
-      if (!response.ok) throw new Error(`Erro Azure Maps: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Erro na chamada ao Azure Maps: ${response.statusText}`);
+      }
       const data = await response.json();
 
       for (const poi of data.results) {
-        const nome = poi.poi.name;
-        const coords = {
-          type: "Point",
-          coordinates: [poi.position.lon, poi.position.lat]
-        };
+        let imagemURL = "https://via.placeholder.com/300x200?text=Sem+imagem";
 
-        const existe = await col.findOne({ nome, "coords.coordinates": coords.coordinates });
-        if (existe) continue;
-
-        // Buscar imagem da Mapillary
-        let imagemUrl = "https://via.placeholder.com/150";
-
+        // Buscar imagem do Mapillary
         try {
-          const mapillaryRes = await fetch(
-            `https://graph.mapillary.com/images?access_token=${mapillaryToken}&fields=id,thumb_1024_url&closeto=${coords.coordinates[1]},${coords.coordinates[0]}&limit=1`
-          );
+          const mapiUrl = new URL("https://graph.mapillary.com/images");
+          mapiUrl.searchParams.set("access_token", mapillaryToken);
+          mapiUrl.searchParams.set("fields", "id,thumb_640_url");
+          mapiUrl.searchParams.set("closeto", `${poi.position.lon},${poi.position.lat}`);
+          mapiUrl.searchParams.set("limit", "1");
 
-          const mapillaryJson = await mapillaryRes.json();
-          const thumbUrl = mapillaryJson.data?.[0]?.thumb_1024_url;
+          const mapiRes = await fetch(mapiUrl);
+          const mapiData = await mapiRes.json();
 
-          if (thumbUrl) {
-            const imageFetch = await fetch(thumbUrl);
-            const arrayBuffer = await imageFetch.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
+          if (mapiData.data && mapiData.data.length > 0) {
+            const imgUrl = mapiData.data[0].thumb_640_url;
 
-            // Nome da imagem
-            const slug = nome.toLowerCase().replace(/\s+/g, "_").replace(/[^\w\-]/g, "");
-            const hash = crypto.createHash("md5").update(nome).digest("hex").slice(0, 6);
-            const blobName = `${slug}_${hash}.jpg`;
+            const nomeBase = poi.poi.name.toLowerCase().replace(/[^a-z0-9]/g, "_");
+            const hash = crypto.createHash("md5").update(imgUrl).digest("hex").slice(0, 8);
+            const blobName = `${nomeBase}_${hash}.jpg`;
 
-            const blockBlob = container.getBlockBlobClient(blobName);
-            await blockBlob.uploadData(buffer, {
-              blobHTTPHeaders: { blobContentType: "image/jpeg" }
-            });
+            const blobBlockClient = containerClient.getBlockBlobClient(blobName);
+            const exists = await blobBlockClient.exists();
 
-            imagemUrl = blockBlob.url;
+            if (!exists) {
+              const imgRes = await fetch(imgUrl);
+              const buffer = Buffer.from(await imgRes.arrayBuffer());
+              await blobBlockClient.uploadData(buffer, {
+                blobHTTPHeaders: { blobContentType: "image/jpeg" }
+              });
+            }
+
+            imagemURL = blobBlockClient.url;
           }
         } catch (err) {
-          context.log(`Erro ao buscar imagem no Mapillary para '${nome}': ${err.message}`);
+          context.log.warn(`Erro ao obter imagem do Mapillary: ${err.message}`);
         }
 
         const local = {
-          nome,
-          coords,
+          nome: poi.poi.name,
+          coords: {
+            type: "Point",
+            coordinates: [poi.position.lon, poi.position.lat]
+          },
           categoriaId,
           tipo: categoria,
           tags: poi.poi.categories || [],
           info: poi.poi.classifications?.map(c => c.code).join(", ") || "",
-          imagem: imagemUrl
+          imagem: imagemURL
         };
 
-        await col.insertOne(local);
-        context.log(`Inserido: ${nome}`);
+        const existe = await col.findOne({
+          nome: local.nome,
+          "coords.coordinates": local.coords.coordinates
+        });
+
+        if (!existe) {
+          await col.insertOne(local);
+          context.log(`Inserido: ${local.nome}`);
+        } else {
+          context.log(`Já existe: ${local.nome}`);
+        }
       }
     }
 
     await client.close();
+
     context.res = {
       status: 200,
+      headers: { "Content-Type": "application/json" },
       body: { mensagem: "Locais adicionados com sucesso." }
     };
 
   } catch (err) {
-    context.log.error("Erro:", err.message);
+    context.log.error("ERRO INTERNO DETETADO");
+    context.log.error("Mensagem:", err.message || "sem mensagem");
+    context.log.error("Stacktrace:", err.stack || "sem stack");
+
     context.res = {
       status: 500,
-      body: "Erro interno: " + err.message
+      body: "Erro interno: " + (err.message || "desconhecido")
     };
   }
 };
