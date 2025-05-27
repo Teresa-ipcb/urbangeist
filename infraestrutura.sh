@@ -130,15 +130,18 @@ STORAGE_CONN_STRING=$(az storage account show-connection-string --name $STORAGE_
 az webapp config appsettings set --name $APP_NAME \
                                  --resource-group $RESOURCE_GROUP \
                                  --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
-                                                  COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
-                                                  AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" 
+					    COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
+					    AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" \
+					    MAPILLARY_TOKEN="MLY|9589542104477443|51fa759e25e400b139506cbc58d40d9e"
 
 # Definir variáveis de ambiente para Function App
 az functionapp config appsettings set --name $FUNCTION_APP \
                                       --resource-group $RESOURCE_GROUP \
                                       --settings AZURE_MAPS_KEY=$AZURE_MAPS_KEY \
 						 COSMOSDB_CONN_STRING="$COSMOSDB_CONN_STRING" \
-                                                 AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" 
+                                                 AZURE_STORAGE_CONNECTION_STRING="$STORAGE_CONN_STRING" \
+                                                 MAPILLARY_TOKEN="MLY|9589542104477443|51fa759e25e400b139506cbc58d40d9e"
+
 
 # Adicionar permissões CORS
 az functionapp cors add --name $FUNCTION_APP \
