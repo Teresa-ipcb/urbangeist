@@ -117,7 +117,8 @@ module.exports = async function (context, req) {
           tipo: categoria,
           tags: poi.poi.categories || [],
           info: poi.poi.classifications?.map(c => c.code).join(", ") || "",
-          imagem: imagemURL
+          imagemOriginal: imagemURL,
+          imagemThumbnail: null
         };
 
         const existe = await col.findOne({
