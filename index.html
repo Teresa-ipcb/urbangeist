@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <script>
-(async function() {
-    const response = await fetch('https://your-function.azurewebsites.net/api/checkSession', {
-        credentials: 'include'
-    });
-    
-    if (!response.ok) {
+    fetch('https://your-function.azurewebsites.net/api/checkSession', {
+        method: 'GET',
+        credentials: 'include', // Para enviar cookies
+        mode: 'cors' // Ativa o modo CORS explicitamente
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Não autorizado');
+        return response.json();
+    })
+    .catch(error => {
         window.location.href = 'frontend/authentication.html';
-    }
-})();
+    });
 </script>
 
 <html lang="pt">
