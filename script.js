@@ -92,7 +92,8 @@ function inicializarMapa(locais, azureMapsKey, userLat, userLon) {
     authOptions: {
       authType: 'subscriptionKey',
       subscriptionKey: azureMapsKey
-    }
+    },
+    enableCors: true
   });
 
   map.events.add('ready', () => {
