@@ -90,10 +90,16 @@ nav
 #div_new
 {
     background-color: lightgrey;
-    bottom:25%;
+    bottom:32%;
     left: 55%;
     position: relative;
     width: 40%;
+}
+
+.login-conteudo-informacoes
+{
+    margin-left: 26%;
+    margin-top: 7%;
 }
 
 .registerData
