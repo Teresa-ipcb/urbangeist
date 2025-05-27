@@ -104,7 +104,7 @@ module.exports = async function (context, req) {
         // Se falhou imagem, usa o default com base no tipo
         if (!imagemURL) {
           const tipoFormatado = categoria.toLowerCase();
-          imagemURL = `https://${storageAccount}.blob.core.windows.net/${blobContainer}/${tipoFormatado}.jpg`;
+          imagemURL = `https://${storageAccount}.blob.core.windows.net/${blobContainer}/default/${tipoFormatado}.jpg`;
         }
 
         const local = {
