@@ -18,8 +18,8 @@ module.exports = async function (context, req) {
     const mongoUri = process.env.COSMOSDB_CONN_STRING;
     const blobConn = process.env.AZURE_STORAGE_CONNECTION_STRING;
     const mapillaryToken = process.env.MAPILLARY_TOKEN;
-    const blobContainer = "imagens";
-    const storageAccount = "urbangeiststorage"; // <- atualiza se o nome for outro
+    const blobContainer = "locais-imagens";
+    const storageAccount = "urbangeiststorage";
 
     if (!mapsKey || !mongoUri || !blobConn || !mapillaryToken) {
       context.res = {
