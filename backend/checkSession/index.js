@@ -2,6 +2,20 @@
 const { MongoClient } = require("mongodb");
 
 module.exports = async function (context, req) {
+    // Configuração de CORS
+    context.res = {
+        headers: {
+            "Access-Control-Allow-Origin": "https://urbangeist-app.azurewebsites.net",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Set-Cookie"
+        }
+    };
+    
+    if (req.method === "OPTIONS") {
+        return context.res;
+    }
+    
     const sessionId = req.cookies.sessionId;
     const client = new MongoClient(process.env.COSMOSDB_CONN_STRING);
 
