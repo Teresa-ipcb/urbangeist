@@ -20,6 +20,19 @@ module.exports = async function (context, req) {
             context.res = { status: 401, body: "Password incorreta." };
             return;
         }
+
+         // Criar sessão
+        const sessionId = uuidv4();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 horas
+        
+        await sessions.insertOne({
+            sessionId,
+            userId: user._id,
+            email: user.email,
+            expiresAt,
+            userAgent: req.headers['user-agent'],
+            ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress
+        });
         
         context.res = { 
             status: 200, 
@@ -27,7 +40,15 @@ module.exports = async function (context, req) {
                 message: "Login bem-sucedido.",
                 nome: user.nome,
                 email: user.email
-            }
+            },
+            cookies: [{
+                name: "sessionId",
+                value: sessionId,
+                maxAge: 24 * 60 * 60,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "Strict"
+            }]
         };
     } catch (err) {
         context.res = { status: 500, body: "Erro ao fazer login." };
