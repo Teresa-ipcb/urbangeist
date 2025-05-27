@@ -245,7 +245,7 @@ function atualizarVistaLocais(locaisParaMostrar = []) {
     const card = document.createElement('div');
     card.className = 'local-card';
     card.innerHTML = `
-      <img src="${local.imagemOriginal || 'https://via.placeholder.com/300x200?text=Sem+imagem'}" 
+      <img src="${local.imagemOriginal || local.imagem || 'https://via.placeholder.com/300x200?text=Sem+imagem'}" 
            alt="${local.nome}" 
            class="local-imagem"
            loading="lazy">
@@ -302,7 +302,7 @@ function mostrarDetalhesLocal(local) {
   container.innerHTML = `
     <div class="detalhes-conteudo">
       <button class="fechar-btn" onclick="fecharDetalhes()">×</button>
-      <img src="${local.imagemOriginal}" 
+      <img src="${local.imagemOriginal || local.imagem}" 
        data-id="${local._id}" 
        onclick="ampliarImagem(this)" 
        class="imagem-local">
