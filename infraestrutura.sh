@@ -6,10 +6,10 @@ LOCATION="francecentral"
 APP_NAME="urbangeist-app"
 COSMOSDB_NAME="urbangeist-db"
 BD_NAME="urbangeist"
-STORAGE_ACCOUNT="urbangeiststorage"
+STORAGE_ACCOUNT="teste56"
 FUNCTION_APP="urbangeist-function"
 AZURE_MAPS_ACCOUNT="urbangeist-maps"
-CONTAINER_NAME="imagens"
+CONTAINER_NAME="teste"
 
 # Pasta local com imagens default por tipo categoria
 DEFAULT_IMAGES_DIR="./frontend/images"
@@ -57,20 +57,53 @@ az cosmosdb mongodb collection create --account-name $COSMOSDB_NAME \
                                       --idx '[{"key": {"keys": ["_id"]}}, {"key": {"keys": ["coords"], "options": {"2dsphereIndexVersion": 3}}}]'
 
 # Criar Storage Account
-az storage account create --name $STORAGE_ACCOUNT \
-                          --resource-group $RESOURCE_GROUP \
-			  --allow-blob-public-access true \
-                          --sku Standard_LRS
+# Criar Storage Account (equivalente ao recurso principal)
+az storage account create \
+  --name teste56 \
+  --resource-group $RESOURCE_GROUP \
+  --location francecentral \
+  --sku Standard_ZRS \
+  --kind StorageV2 \
+  --min-tls-version TLS1_2 \
+  --allow-blob-public-access true \
+  --allow-shared-key-access true \
+  --public-network-access Enabled \
+  --bypass AzureServices \
+  --default-action Allow \
+  --https-only true \
+  --access-tier Hot
+
+# Configurar Blob Service
+az storage account blob-service-properties update \
+  --account-name teste56 \
+  --resource-group $RESOURCE_GROUP \
+  --enable-change-feed true \
+  --enable-restore-policy true \
+  --restore-days 1 \
+  --enable-container-delete-retention true \
+  --container-retention-days 2 \
+  --enable-delete-retention true \
+  --delete-retention-days 2 \
+  --enable-versioning true
+
+# Configurar File Service
+az storage account file-service-properties update \
+  --account-name teste56 \
+  --resource-group $RESOURCE_GROUP \
+  --enable-smb-protocol \
+  --enable-share-delete-retention true \
+  --share-retention-days 2
+
+# Criar container (equivalente ao último recurso)
+az storage container create \
+  --name teste \
+  --account-name teste56 \
+  --public-access container
 
 
 STORAGE_KEY=$(az storage account keys list --account-name $STORAGE_ACCOUNT \
                                            --resource-group $RESOURCE_GROUP \
                                            --query '[0].value' -o tsv)
-
-az storage container create --name $CONTAINER_NAME \
-                            --account-name $STORAGE_ACCOUNT \
-                            --account-key $STORAGE_KEY \
-                            --public-access blob
 
 # Fazer upload de cada imagem default
 for img_path in $DEFAULT_IMAGES_DIR/*.jpg; do
