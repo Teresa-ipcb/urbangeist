@@ -150,9 +150,9 @@ async function gerarImagemLocal(poi, categoria, mapsKey, containerClient, contex
   staticImageUrl.searchParams.append("subscription-key", mapsKey);
   staticImageUrl.searchParams.append("center", `${poi.position.lon},${poi.position.lat}`);
   staticImageUrl.searchParams.append("zoom", "15");
-  staticImageUrl.append("width", IMAGE_WIDTH);
-  staticImageUrl.append("height", IMAGE_HEIGHT);
-  staticImageUrl.append(
+  staticImageUrl.searchParams.append("width", IMAGE_WIDTH);
+  staticImageUrl.searchParams.append("height", IMAGE_HEIGHT);
+  staticImageUrl.searchParams.append(
     "pins", 
     `default|${CATEGORY_ICONS[categoria]}||${poi.position.lon} ${poi.position.lat}`
   );
