@@ -1,103 +1,76 @@
 const { MongoClient } = require("mongodb");
+const { BlobServiceClient } = require("@azure/storage-blob");
 
-async function buscarImagemEstabelecimento(poiId, mapsKey) {
-  try {
-    const searchUrl = `https://atlas.microsoft.com/search/poi/${poiId}/photos/json?api-version=1.0&subscription-key=${mapsKey}`;
-    
-    const response = await fetch(searchUrl);
-    if (!response.ok) return null;
-    
-    const photosData = await response.json();
-    if (photosData.photos && photosData.photos.length > 0) {
-      const bestPhoto = photosData.photos.reduce((prev, current) => 
-        (prev.width * prev.height) > (current.width * current.height) ? prev : current
-      );
-      return bestPhoto.url;
-    }
-  } catch (error) {
-    console.error("Erro ao buscar imagens:", error);
-    return null;
-  }
-  return null;
-}
+// Configurações
+const CONTAINER_NAME = "locais-imagens";
+const IMAGE_WIDTH = 800;
+const IMAGE_HEIGHT = 600;
+
+// Ícones por categoria
+const CATEGORY_ICONS = {
+  "Lazer": "park",
+  "Eventos": "star",
+  "Cultura": "museum",
+  "Natureza": "tree",
+  "Culinária": "restaurant"
+};
 
 module.exports = async function (context, req) {
   try {
     const { lat, lon } = req.query;
-
-    context.log("Parâmetros recebidos:", lat, lon);
-
-    if (!lat || !lon) {
-      context.res = {
-        status: 400,
-        body: "Parâmetros 'lat' e 'lon' são obrigatórios."
-      };
-      return;
-    }
-
     const mapsKey = process.env.AZURE_MAPS_KEY;
     const mongoUri = process.env.COSMOSDB_CONN_STRING;
+    const storageConnString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 
-    if (!mapsKey || !mongoUri) {
-      context.log.error("Variáveis de ambiente ausentes!");
-      context.res = {
-        status: 500,
-        body: "AZURE_MAPS_KEY ou COSMOSDB_CONN_STRING não definidas."
-      };
-      return;
+    // Validações iniciais
+    if (!lat || !lon) {
+      return badRequest(context, "'lat' e 'lon' são obrigatórios");
     }
 
-    const radius = 20000;
+    if (!mapsKey || !mongoUri || !storageConnString) {
+      return serverError(context, "Variáveis de ambiente ausentes");
+    }
 
+    // Conexão com o MongoDB
+    const client = new MongoClient(mongoUri);
+    await client.connect();
+    const db = client.db("urbangeist");
+    const locaisCollection = db.collection("tb_local");
+
+    // Configuração do Blob Storage
+    const blobServiceClient = BlobServiceClient.fromConnectionString(storageConnString);
+    const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+    await containerClient.createIfNotExists({ access: 'blob' });
+
+    // Categorias de busca
     const categoriaMap = {
       "Lazer": "1",
-      "Eventos": "2",
+      "Eventos": "2", 
       "Cultura": "3",
       "Natureza": "4",
       "Culinária": "5"
     };
 
-    context.log("Ligando ao MongoDB...");
-    const client = new MongoClient(mongoUri);
-    await client.connect();
-    const db = client.db("urbangeist");
-    const col = db.collection("tb_local");
-    context.log("Ligado ao MongoDB");
-
+    // Processar cada categoria
     for (const [categoria, categoriaId] of Object.entries(categoriaMap)) {
-      context.log(`Buscando '${categoria}' no Azure Maps...`);
+      context.log(`Processando categoria: ${categoria}`);
 
-      const url = new URL("https://atlas.microsoft.com/search/poi/json");
-      url.searchParams.set("subscription-key", mapsKey);
-      url.searchParams.set("api-version", "1.0");
-      url.searchParams.set("lat", lat);
-      url.searchParams.set("lon", lon);
-      url.searchParams.set("radius", radius);
-      url.searchParams.set("query", categoria.toLowerCase());
-      url.searchParams.set("limit", 10);
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Erro na chamada ao Azure Maps: ${response.statusText}`);
-      }
-      const data = await response.json();
-
-      context.log(`${categoria}: ${data.results.length} encontrados`);
-
-      // Processamento dos locais com imagens
-      const locais = [];
-      for (const poi of data.results) {
+      // Buscar POIs no Azure Maps
+      const pois = await buscarPOIs(categoria, lat, lon, mapsKey, context);
+      
+      // Processar cada POI encontrado
+      for (const poi of pois) {
         try {
-          let imagemEstabelecimento = await buscarImagemEstabelecimento(poi.poi.id, mapsKey);
-          
-          if (!imagemEstabelecimento) {
-            imagemEstabelecimento = `https://atlas.microsoft.com/map/static/png?api-version=1.0` +
-              `&subscription-key=${mapsKey}&zoom=15` +
-              `&center=${poi.position.lon},${poi.position.lat}` +
-              `&width=600&height=400` +
-              `&pins=default|coffeeCup||${poi.position.lon} ${poi.position.lat}`;
-          }
+          // Gerar imagem do local
+          const imagemUrl = await gerarImagemLocal(
+            poi, 
+            categoria, 
+            mapsKey, 
+            containerClient,
+            context
+          );
 
+          // Criar documento do local
           const local = {
             nome: poi.poi.name,
             coords: {
@@ -106,44 +79,115 @@ module.exports = async function (context, req) {
             },
             categoriaId,
             tipo: categoria,
-            imagem: imagemEstabelecimento,
-            imagemOriginal: imagemEstabelecimento
+            imagem: imagemUrl,
+            imagemOriginal: imagemUrl,
+            tags: poi.poi.categories || [],
+            ultimaAtualizacao: new Date()
           };
 
-          const existe = await col.findOne({
-            nome: local.nome,
-            "coords.coordinates": local.coords.coordinates
-          });
+          // Upsert no MongoDB
+          await locaisCollection.updateOne(
+            { 
+              nome: local.nome,
+              "coords.coordinates": local.coords.coordinates
+            },
+            { $set: local },
+            { upsert: true }
+          );
 
-          if (!existe) {
-            await col.insertOne(local);
-            context.log(`Inserido: ${local.nome}`);
-          } else {
-            context.log(`Já existe: ${local.nome}`);
-          }
-
-          locais.push(local);
         } catch (error) {
-          context.log(`Erro ao processar POI ${poi.poi.name}:`, error);
+          context.log(`Erro ao processar POI ${poi.poi.name}: ${error.message}`);
         }
       }
     }
 
     await client.close();
-    context.res = {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-      body: { mensagem: "Locais adicionados com sucesso." }
-    };
+    return successResponse(context, "Locais atualizados com sucesso");
 
   } catch (err) {
-    context.log.error("ERRO INTERNO DETETADO");
-    context.log.error("Mensagem:", err.message || "sem mensagem");
-    context.log.error("Stacktrace:", err.stack || "sem stack");
-
-    context.res = {
-      status: 500,
-      body: "Erro interno: " + (err.message || "desconhecido")
-    };
+    context.log.error("Erro principal:", err);
+    return serverError(context, err.message);
   }
 };
+
+// Funções auxiliares
+async function buscarPOIs(categoria, lat, lon, mapsKey, context) {
+  const url = new URL("https://atlas.microsoft.com/search/poi/json");
+  url.searchParams.append("subscription-key", mapsKey);
+  url.searchParams.append("api-version", "1.0");
+  url.searchParams.append("query", categoria);
+  url.searchParams.append("lat", lat);
+  url.searchParams.append("lon", lon);
+  url.searchParams.append("radius", 20000);
+  url.searchParams.append("limit", 10);
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Azure Maps error: ${response.status}`);
+  }
+  return (await response.json()).results;
+}
+
+async function gerarImagemLocal(poi, categoria, mapsKey, containerClient, context) {
+  // 1. Tentar buscar foto do POI
+  try {
+    const photosUrl = `https://atlas.microsoft.com/search/poi/${poi.poi.id}/photos/json?subscription-key=${mapsKey}&api-version=1.0`;
+    const photosResponse = await fetch(photosUrl);
+    
+    if (photosResponse.ok) {
+      const photosData = await photosResponse.json();
+      if (photosData.photos?.length > 0) {
+        return photosData.photos[0].url; // Usa a primeira foto disponível
+      }
+    }
+  } catch (error) {
+    context.log(`Não encontrou fotos para ${poi.poi.name}`);
+  }
+
+  // 2. Criar imagem estática personalizada
+  const staticImageUrl = new URL("https://atlas.microsoft.com/map/static/png");
+  staticImageUrl.searchParams.append("api-version", "1.0");
+  staticImageUrl.searchParams.append("subscription-key", mapsKey);
+  staticImageUrl.searchParams.append("center", `${poi.position.lon},${poi.position.lat}`);
+  staticImageUrl.searchParams.append("zoom", "15");
+  staticImageUrl.append("width", IMAGE_WIDTH);
+  staticImageUrl.append("height", IMAGE_HEIGHT);
+  staticImageUrl.append(
+    "pins", 
+    `default|${CATEGORY_ICONS[categoria]}||${poi.position.lon} ${poi.position.lat}`
+  );
+
+  // 3. Fazer upload para Blob Storage
+  try {
+    const imageResponse = await fetch(staticImageUrl);
+    const blobName = `local-${Date.now()}-${poi.poi.name.replace(/[^\w]/g, '-')}.jpg`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    
+    await blockBlobClient.uploadStream(imageResponse.body);
+    return blockBlobClient.url;
+  } catch (error) {
+    context.log(`Erro no upload da imagem: ${error.message}`);
+    return staticImageUrl.toString(); // Fallback para URL direta se falhar o upload
+  }
+}
+
+function successResponse(context, message) {
+  context.res = {
+    status: 200,
+    body: { success: true, message }
+  };
+}
+
+function badRequest(context, message) {
+  context.res = {
+    status: 400,
+    body: { success: false, message }
+  };
+}
+
+function serverError(context, message) {
+  context.res = {
+    status: 500, 
+    body: { success: false, message }
+  };
+}
