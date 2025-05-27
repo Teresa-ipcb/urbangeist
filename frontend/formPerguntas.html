@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>UrbanGueistForm</title>
+</head>
+<body>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(to bottom right, #e0f7fa, #b3e5fc);
+      color: #004d40;
+    }
+    form {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #00796b;
+    }
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .options {
+      margin-left: 20px;
+      margin-top: 5px;
+    }
+    input[type="radio"] {
+      margin-right: 10px;
+    }
+    button {
+      display: block;
+      margin: 30px auto 0;
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0277bd;
+    }
+  </style>
+</head>
+<body>
+  <h1>UrbanGueist</h1>
+  <form>
+    <label>Pergunta 1 - O que gosta de fazer no seu tempo livre?</label>
+    <div class="options">
+      <input type="radio" name="tempo_livre" value="Restaurantes"> Restaurantes<br>
+      <input type="radio" name="tempo_livre" value="Museus"> Museus<br>
+      <input type="radio" name="tempo_livre" value="Caminhadas"> Caminhadas<br>
+      <input type="radio" name="tempo_livre" value="Cinema"> Cinema<br>
+      <input type="radio" name="tempo_livre" value="Teatro"> Teatro<br>
+      <input type="radio" name="tempo_livre" value="Bares"> Bar<br>
+    </div>
+
+    <label>Pergunta 2 - Prefere atividades diurnas ou noturnas?</label>
+    <div class="options">
+      <input type="radio" name="periodo" value="Diurnas"> Diurnas<br>
+      <input type="radio" name="periodo" value="Noturnas"> Noturnas<br>
+      <input type="radio" name="periodo" value="Ambas"> Ambas<br>
+    </div>
+
+    <label>Pergunta 3 - Está a planear atividades para si ou para um grupo?</label>
+    <div class="options">
+      <input type="radio" name="planeamento" value="Individual"> Individual<br>
+      <input type="radio" name="planeamento" value="Em grupo"> Em grupo<br>
+    </div>
+
+    <label>Pergunta 4 - Como descreveria o seu estilo?</label>
+    <div class="options">
+      <input type="radio" name="estilo" value="Aventuroso"> Aventuroso<br>
+      <input type="radio" name="estilo" value="Relaxado"> Relaxado<br>
+      <input type="radio" name="estilo" value="Cultural"> Cultural<br>
+      <input type="radio" name="estilo" value="Moderno"> Moderno<br>
+      <input type="radio" name="estilo" value="Tradicional"> Tradicional<br>
+    </div>
+
+    <label>Pergunta 5 - Qual é o seu orçamento típico para uma atividade ou saída?</label>
+    <div class="options">
+      <input type="radio" name="orcamento" value="Económico"> Económico<br>
+      <input type="radio" name="orcamento" value="Moderado"> Moderado<br>
+      <input type="radio" name="orcamento" value="Luxuoso"> Luxuoso<br>
+    </div>
+
+    <label>Pergunta 6 - Alguma condição especial deve ser considerada para garantir o seu conforto?</label>
+    <div class="options">
+      <input type="radio" name="condicoes" value="Mobilidade reduzida"> Mobilidade reduzida<br>
+      <input type="radio" name="condicoes" value="Necessidades auditivas"> Necessidades auditivas<br>
+      <input type="radio" name="condicoes" value="Necessidades visuais"> Necessidades visuais<br>
+      <input type="radio" name="condicoes" value="Nenhuma"> Nenhuma<br>
+    </div>
+
+    <label>Pergunta 7 - Prefere locais com acesso facilitado, como rampas ou elevadores?</label>
+    <div class="options">
+      <input type="radio" name="acesso_facilitado" value="Sim"> Sim<br>
+      <input type="radio" name="acesso_facilitado" value="Não"> Não<br>
+    </div>
+
+    <label>Pergunta 8 - É importante que os locais sugeridos tenham serviços específicos?</label>
+    <div class="options">
+      <input type="radio" name="servicos_especificos" value="Sim"> Sim<br>
+      <input type="radio" name="servicos_especificos" value="Não"> Não<br>
+    </div>
+
+    <label>Pergunta 9 - Há restrições alimentares ou necessidades específicas que devem ser consideradas?</label>
+    <div class="options">
+      <input type="radio" name="restricoes_alimentares" value="Sim"> Sim<br>
+      <input type="radio" name="restricoes_alimentares" value="Não"> Não<br>
+    </div>
+
+    <label>Pergunta 10 - Que tipo de transporte utiliza normalmente para se deslocar?</label>
+    <div class="options">
+      <input type="radio" name="transporte" value="Transporte público"> Transporte público<br>
+      <input type="radio" name="transporte" value="Carro próprio"> Carro próprio<br>
+      <input type="radio" name="transporte" value="Táxi"> Táxi<br>
+      <input type="radio" name="transporte" value="Bicicleta"> Bicicleta<br>
+    </div>
+
+    <label>Pergunta 11 - Gostaria de receber sugestões de atividades ao ar livre ou prefere ambientes fechados e controlados?</label>
+    <div class="options">
+      <input type="radio" name="ambiente" value="Ao ar livre"> Ao ar livre<br>
+      <input type="radio" name="ambiente" value="Ambientes fechados"> Ambientes fechados<br>
+    </div>
+
+    <br>
+    <button type="submit">Submeter</button>
+  </form>
+
+<script>
+document.querySelector("form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const email = localStorage.getItem("user_email");
+    if (!email) {
+        alert("Utilizador não autenticado.");
+        return;
+    }
+
+    const formData = new FormData(e.target);
+    const preferencias = {};
+    formData.forEach((value, key) => {
+        preferencias[key] = value;
+    });
+
+    const response = await fetch("https://urbangeist-function.azurewebsites.net/api/preferencias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, preferencias })
+    });
+
+    if (response.ok) {
+        alert("Preferências guardadas com sucesso!");
+    } else {
+        alert("Erro ao guardar preferências.");
+    }
+});
+</script>
+
+</body>
+</html>
