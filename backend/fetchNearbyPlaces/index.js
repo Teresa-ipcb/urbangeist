@@ -63,10 +63,18 @@ module.exports = async function (context, req) {
 
       context.log(`${categoria}: ${data.results.length} encontrados`);
 
-      const locais = data.results.map(poi => {
-        // Gera URL de imagem estática do Azure Maps
-        const staticMapUrl = `https://atlas.microsoft.com/map/static/png?api-version=1.0&subscription-key=${mapsKey}&zoom=15&center=${poi.position.lon},${poi.position.lat}&width=600&height=400&pins=default||${poi.position.lon} ${poi.position.lat}`;
+      const locais = await Promise.all(data.results.map(async (poi) => {
+        let imagemEstabelecimento = await buscarImagemEstabelecimento(poi.poi.id, mapsKey);
         
+        // 2. Se não encontrar, usa a vista de mapa estático com pin
+        if (!imagemEstabelecimento) {
+          imagemEstabelecimento = `https://atlas.microsoft.com/map/static/png?api-version=1.0` +
+            `&subscription-key=${mapsKey}&zoom=15` +
+            `&center=${poi.position.lon},${poi.position.lat}` +
+            `&width=600&height=400` +
+            `&pins=default|coffeeCup||${poi.position.lon} ${poi.position.lat}`;
+        }
+
         return {
           nome: poi.poi.name,
           coords: {
@@ -75,8 +83,8 @@ module.exports = async function (context, req) {
           },
           categoriaId,
           tipo: categoria,
-          imagem: staticMapUrl,
-          imagemOriginal: staticMapUrl
+          imagem: imagemEstabelecimento,
+          imagemOriginal: imagemEstabelecimento
         };
       });
 
@@ -113,3 +121,25 @@ module.exports = async function (context, req) {
     };
   }
 };
+
+async function buscarImagemEstabelecimento(poiId, mapsKey) {
+  try {
+    const searchUrl = `https://atlas.microsoft.com/search/poi/${poiId}/photos/json?api-version=1.0&subscription-key=${mapsKey}`;
+    
+    const response = await fetch(searchUrl);
+    if (!response.ok) return null;
+    
+    const photosData = await response.json();
+    if (photosData.photos && photosData.photos.length > 0) {
+      // Pega a melhor imagem disponível (maior resolução)
+      const bestPhoto = photosData.photos.reduce((prev, current) => 
+        (prev.width * prev.height) > (current.width * current.height) ? prev : current
+      );
+      return bestPhoto.url;
+    }
+  } catch (error) {
+    console.error("Erro ao buscar imagens:", error);
+    return null;
+  }
+  return null;
+}
