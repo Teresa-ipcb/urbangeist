@@ -146,6 +146,7 @@ document.querySelector("form").addEventListener("submit", async function (e) {
     const email = localStorage.getItem("user_email");
     if (!email) {
         alert("Utilizador não autenticado.");
+        window.location.href = "authentication.html";
         return;
     }
 
@@ -163,6 +164,7 @@ document.querySelector("form").addEventListener("submit", async function (e) {
 
     if (response.ok) {
         alert("Preferências guardadas com sucesso!");
+        window.location.href = "../index.html";
     } else {
         alert("Erro ao guardar preferências.");
     }
