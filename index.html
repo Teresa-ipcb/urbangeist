@@ -1,4 +1,16 @@
 <!DOCTYPE html>
+<script>
+(async function() {
+    const response = await fetch('https://your-function.azurewebsites.net/api/checkSession', {
+        credentials: 'include'
+    });
+    
+    if (!response.ok) {
+        window.location.href = 'frontend/authentication.html';
+    }
+})();
+</script>
+
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
