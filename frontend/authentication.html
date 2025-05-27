@@ -1,15 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UrbanGeist</title>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
     <link rel="stylesheet" href="authentication.css">
 </head>
-
+<body>
 <header class="header">
     <nav>
         <div class="nav-title">
@@ -24,97 +20,131 @@
     <hr>
 </header>
 
-    <div class="top-container">
-        <h2 id="purposeDescription">INICIAR SESSÃO</h2>
-
-        <div class="autenticacao">
-            <div id="div_login">
-                <main class="login-conteudo">
-                    <div class="login-conteudo-principal">
-                        <form class="login-conteudo-informacoes" method="post">
-                            <div class="login-conteudo-email">
-                                <label for="" id="login-conteudo-email-titulo" class="formElements">
-                                    Email:
-                                </label>
-                                <input type="email" name="" id="email" class="inputData formElements">
-                            </div>
-
-                            <div class="login-conteudo-password">
-                                <label for="" id="login-conteudo-password-titulo" class="formElements">
-                                    Password:
-                                </label>
-                                <input type="password" name="" id="password" class="inputData formElements">
-                            </div>
-
-                            <div class="login-conteudo-botoes">
-                                <input type="button" value="Entrar" id="btn_login">
-                            </div>
-
-                            <p id="output"></p>
-
-                        </form>
-                    </div>
-                </main>
-            </div>
-
-            <div id="div_new">
-                <div class="register">
-                    <h2 id="novo">Novo Cliente?</h2>
-
-                    <div class="registerData">
-                        <form class="login-conteudo-informacoes" method="post">
-                            <div class="login-conteudo-nome">
-                                <label for="" class="formElements" id="login-conteudo-nome-titulo">
-                                    Nome: *
-                                </label>
-                                <input type="text" name="" id="pNome" class="inputData formElements" required>
-                            </div>
-            
-                            <div class="login-conteudo-email">
-                                <label for="" id="login-conteudo-email-titulo" class="formElements">
-                                    Email: *
-                                </label>
-                                <input type="email" name="" id="emailR" class="inputData formElements" required>
-                            </div>
-            
-                            <div class="login-conteudo-password">
-                                <label for="" id="login-conteudo-password-titulo" class="formElements">
-                                    Password: *
-                                </label>
-                                <input type="password" name="" id="passwordR" class="inputData formElements" required>
-                            </div>
-            
-                            <div class="login-conteudo-botoes">
-                                <input type="button" value="Criar" id="btn_criar">
-                            </div>
-            
-                        </form>
-            
+<div class="top-container">
+    <h2 id="purposeDescription">INICIAR SESSÃO</h2>
+    <div class="autenticacao">
+        <div id="div_login">
+            <main class="login-conteudo">
+                <div class="login-conteudo-principal">
+                    <form class="login-conteudo-informacoes">
+                        <div class="login-conteudo-email">
+                            <label>Email:</label>
+                            <input type="email" id="email" class="inputData" />
+                        </div>
+                        <div class="login-conteudo-password">
+                            <label>Password:</label>
+                            <input type="password" id="password" class="inputData" />
+                        </div>
+                        <div class="login-conteudo-botoes">
+                            <input type="button" value="Entrar" id="btn_login" />
+                        </div>
                         <p id="output"></p>
-                    </div>
-
+                    </form>
                 </div>
+            </main>
+        </div>
+
+        <div id="div_new">
+            <div class="register">
+                <h2>Novo Cliente?</h2>
+                <form class="login-conteudo-informacoes">
+                    <div class="login-conteudo-nome">
+                        <label>Nome: *</label>
+                        <input type="text" id="pNome" class="inputData" required />
+                    </div>
+                    <div class="login-conteudo-email">
+                        <label>Email: *</label>
+                        <input type="email" id="emailR" class="inputData" required />
+                    </div>
+                    <div class="login-conteudo-password">
+                        <label>Password: *</label>
+                        <input type="password" id="passwordR" class="inputData" required />
+                    </div>
+                    <div class="login-conteudo-botoes">
+                        <input type="button" value="Criar" id="btn_criar" />
+                    </div>
+                </form>
+                <p id="output"></p>
             </div>
         </div>
-
-        <div class="perfil-info">
-        </div>
-
     </div>
+</div>
 
-    <footer class="footer">
-        <h4>UrbanGeist</h4>
-        <p id="direitos">© 2025 UrbanGeist, Todos os direitos reservados</p>
-        <div class="nav-footer">
-            <ul>
-                <li><a href="../index.html">Home</a></li>
-                <li><a href="about.html">Sobre Nós</a></li>
-            </ul>
-        </div>   
-    </footer>
+<footer class="footer">
+    <h4>UrbanGeist</h4>
+    <p>© 2025 UrbanGeist, Todos os direitos reservados</p>
+    <div class="nav-footer">
+        <ul>
+            <li><a href="../index.html">Home</a></li>
+            <li><a href="about.html">Sobre Nós</a></li>
+        </ul>
+    </div>
+</footer>
 
-    <!-- Mover o script para o final do body -->
-    <script src="authentication.js"></script>
+<script>
+document.getElementById("btn_criar").addEventListener("click", async function () {
+    const nome = document.getElementById("pNome").value;
+    const email = document.getElementById("emailR").value;
+    const password = document.getElementById("passwordR").value;
+
+    try {
+        const response = await fetch("https://urbangeist-function.azurewebsites.net/api/utilizadores", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify({ nome, email, password })
+        });
+
+        const data = await response.text(); // Primeiro leia como texto
+        
+        if (response.ok) {
+            localStorage.setItem("user_email", email);
+            window.location.href = "formPerguntas.html";
+        } else {
+            try {
+                // Tente parsear como JSON se for possível
+                const errorData = JSON.parse(data);
+                alert(`Erro: ${errorData.body || errorData.message || 'Erro desconhecido'}`);
+            } catch {
+                alert(`Erro: ${data || 'Erro ao criar utilizador'}`);
+            }
+        }
+    } catch (error) {
+        console.error("Erro:", error);
+        alert("Erro de conexão com o servidor. Verifique o console para mais detalhes.");
+    }
+});
+</script>
+
+
+<script>
+document.getElementById("btn_login").addEventListener("click", async function () {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    try {
+        const response = await fetch("https://urbangeist-function.azurewebsites.net/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            localStorage.setItem("user_email", email);
+            localStorage.setItem("user_name", data.nome);
+            alert(`Bem-vindo de volta, ${data.nome}!`);
+            window.location.href = "../index.html"; // Redireciona para a página principal
+        } else {
+            document.getElementById("output").textContent = data;
+        }
+    } catch (error) {
+        document.getElementById("output").textContent = "Erro ao conectar com o servidor.";
+    }
+});
+</script>
 </body>
-
 </html>
