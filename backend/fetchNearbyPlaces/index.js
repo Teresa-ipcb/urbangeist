@@ -1,5 +1,26 @@
 const { MongoClient } = require("mongodb");
 
+async function buscarImagemEstabelecimento(poiId, mapsKey) {
+  try {
+    const searchUrl = `https://atlas.microsoft.com/search/poi/${poiId}/photos/json?api-version=1.0&subscription-key=${mapsKey}`;
+    
+    const response = await fetch(searchUrl);
+    if (!response.ok) return null;
+    
+    const photosData = await response.json();
+    if (photosData.photos && photosData.photos.length > 0) {
+      const bestPhoto = photosData.photos.reduce((prev, current) => 
+        (prev.width * prev.height) > (current.width * current.height) ? prev : current
+      );
+      return bestPhoto.url;
+    }
+  } catch (error) {
+    console.error("Erro ao buscar imagens:", error);
+    return null;
+  }
+  return null;
+}
+
 module.exports = async function (context, req) {
   try {
     const { lat, lon } = req.query;
@@ -63,42 +84,47 @@ module.exports = async function (context, req) {
 
       context.log(`${categoria}: ${data.results.length} encontrados`);
 
-      const locais = await Promise.all(data.results.map(async (poi) => {
-        let imagemEstabelecimento = await buscarImagemEstabelecimento(poi.poi.id, mapsKey);
-        
-        // 2. Se não encontrar, usa a vista de mapa estático com pin
-        if (!imagemEstabelecimento) {
-          imagemEstabelecimento = `https://atlas.microsoft.com/map/static/png?api-version=1.0` +
-            `&subscription-key=${mapsKey}&zoom=15` +
-            `&center=${poi.position.lon},${poi.position.lat}` +
-            `&width=600&height=400` +
-            `&pins=default|coffeeCup||${poi.position.lon} ${poi.position.lat}`;
-        }
+      // Processamento dos locais com imagens
+      const locais = [];
+      for (const poi of data.results) {
+        try {
+          let imagemEstabelecimento = await buscarImagemEstabelecimento(poi.poi.id, mapsKey);
+          
+          if (!imagemEstabelecimento) {
+            imagemEstabelecimento = `https://atlas.microsoft.com/map/static/png?api-version=1.0` +
+              `&subscription-key=${mapsKey}&zoom=15` +
+              `&center=${poi.position.lon},${poi.position.lat}` +
+              `&width=600&height=400` +
+              `&pins=default|coffeeCup||${poi.position.lon} ${poi.position.lat}`;
+          }
 
-        return {
-          nome: poi.poi.name,
-          coords: {
-            type: "Point",
-            coordinates: [poi.position.lon, poi.position.lat]
-          },
-          categoriaId,
-          tipo: categoria,
-          imagem: imagemEstabelecimento,
-          imagemOriginal: imagemEstabelecimento
-        };
-      });
+          const local = {
+            nome: poi.poi.name,
+            coords: {
+              type: "Point",
+              coordinates: [poi.position.lon, poi.position.lat]
+            },
+            categoriaId,
+            tipo: categoria,
+            imagem: imagemEstabelecimento,
+            imagemOriginal: imagemEstabelecimento
+          };
 
-      for (const local of locais) {
-        const existe = await col.findOne({
-          nome: local.nome,
-          "coords.coordinates": local.coords.coordinates
-        });
+          const existe = await col.findOne({
+            nome: local.nome,
+            "coords.coordinates": local.coords.coordinates
+          });
 
-        if (!existe) {
-          await col.insertOne(local);  // Corrigi o typo "local" -> "local"
-          context.log(`Inserido: ${local.nome}`);
-        } else {
-          context.log(`Já existe: ${local.nome}`);
+          if (!existe) {
+            await col.insertOne(local);
+            context.log(`Inserido: ${local.nome}`);
+          } else {
+            context.log(`Já existe: ${local.nome}`);
+          }
+
+          locais.push(local);
+        } catch (error) {
+          context.log(`Erro ao processar POI ${poi.poi.name}:`, error);
         }
       }
     }
@@ -121,25 +147,3 @@ module.exports = async function (context, req) {
     };
   }
 };
-
-async function buscarImagemEstabelecimento(poiId, mapsKey) {
-  try {
-    const searchUrl = `https://atlas.microsoft.com/search/poi/${poiId}/photos/json?api-version=1.0&subscription-key=${mapsKey}`;
-    
-    const response = await fetch(searchUrl);
-    if (!response.ok) return null;
-    
-    const photosData = await response.json();
-    if (photosData.photos && photosData.photos.length > 0) {
-      // Pega a melhor imagem disponível (maior resolução)
-      const bestPhoto = photosData.photos.reduce((prev, current) => 
-        (prev.width * prev.height) > (current.width * current.height) ? prev : current
-      );
-      return bestPhoto.url;
-    }
-  } catch (error) {
-    console.error("Erro ao buscar imagens:", error);
-    return null;
-  }
-  return null;
-}
