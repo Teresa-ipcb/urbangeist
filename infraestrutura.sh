@@ -56,6 +56,7 @@ az cosmosdb mongodb collection create --account-name $COSMOSDB_NAME \
 # Criar Storage Account
 az storage account create --name $STORAGE_ACCOUNT \
                           --resource-group $RESOURCE_GROUP \
+			  --allow-blob-public-access true \
                           --sku Standard_LRS
 
 
