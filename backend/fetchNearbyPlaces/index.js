@@ -64,16 +64,20 @@ module.exports = async function (context, req) {
       context.log(`${categoria}: ${data.results.length} encontrados`);
 
       const locais = data.results.map(poi => ({
-        nome: poi.poi.name,
-        coords: {
-          type: "Point",
-          coordinates: [poi.position.lon, poi.position.lat]
-        },
-        categoriaId,
-        tipo: categoria,
-        tags: poi.poi.categories || [],
-        info: poi.poi.classifications?.map(c => c.code).join(", ") || "",
-        imagem: "https://via.placeholder.com/150"
+        // Gera URL de imagem estática do Azure Maps
+        const staticMapUrl = `https://atlas.microsoft.com/map/static/png?api-version=1.0&subscription-key=${mapsKey}&zoom=15&center=${poi.position.lon},${poi.position.lat}&width=600&height=400&pins=default||${poi.position.lon} ${poi.position.lat}`;
+        
+        return {
+          nome: poi.poi.name,
+          coords: {
+            type: "Point",
+            coordinates: [poi.position.lon, poi.position.lat]
+          },
+          categoriaId,
+          tipo: categoria,
+          imagem: staticMapUrl,       // Imagem do Maps
+          imagemOriginal: staticMapUrl
+          //imagemGenerica: genericImages[categoria] // Fallback
       }));
 
       for (const local of locais) {
