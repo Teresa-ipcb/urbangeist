@@ -245,7 +245,7 @@ function atualizarVistaLocais(locaisParaMostrar = []) {
     const card = document.createElement('div');
     card.className = 'local-card';
     card.innerHTML = `
-      <img src="${local.imagemThumbnail || 'https://via.placeholder.com/300x200?text=Sem+imagem'}" 
+      <img src="${local.imagem || 'https://via.placeholder.com/300x200?text=Sem+imagem'}" 
            alt="${local.nome}" 
            class="local-imagem"
            loading="lazy">
