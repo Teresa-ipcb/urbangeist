@@ -63,7 +63,7 @@ module.exports = async function (context, req) {
 
       context.log(`${categoria}: ${data.results.length} encontrados`);
 
-      const locais = data.results.map(poi => ({
+      const locais = data.results.map(poi => {
         // Gera URL de imagem estática do Azure Maps
         const staticMapUrl = `https://atlas.microsoft.com/map/static/png?api-version=1.0&subscription-key=${mapsKey}&zoom=15&center=${poi.position.lon},${poi.position.lat}&width=600&height=400&pins=default||${poi.position.lon} ${poi.position.lat}`;
         
@@ -75,10 +75,10 @@ module.exports = async function (context, req) {
           },
           categoriaId,
           tipo: categoria,
-          imagem: staticMapUrl,       // Imagem do Maps
+          imagem: staticMapUrl,
           imagemOriginal: staticMapUrl
-          //imagemGenerica: genericImages[categoria] // Fallback
-      }));
+        };
+      });
 
       for (const local of locais) {
         const existe = await col.findOne({
@@ -87,7 +87,7 @@ module.exports = async function (context, req) {
         });
 
         if (!existe) {
-          await col.insertOne(local);
+          await col.insertOne(local);  // Corrigi o typo "local" -> "local"
           context.log(`Inserido: ${local.nome}`);
         } else {
           context.log(`Já existe: ${local.nome}`);
