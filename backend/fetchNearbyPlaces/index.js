@@ -19,6 +19,7 @@ module.exports = async function (context, req) {
     const blobConn = process.env.AZURE_STORAGE_CONNECTION_STRING;
     const mapillaryToken = process.env.MAPILLARY_TOKEN;
     const blobContainer = "imagens";
+    const storageAccount = "urbangeiststorage"; // <- atualiza se o nome for outro
 
     if (!mapsKey || !mongoUri || !blobConn || !mapillaryToken) {
       context.res = {
@@ -63,7 +64,7 @@ module.exports = async function (context, req) {
       const data = await response.json();
 
       for (const poi of data.results) {
-        let imagemURL = "https://via.placeholder.com/300x200?text=Sem+imagem";
+        let imagemURL;
 
         // Buscar imagem do Mapillary
         try {
@@ -98,6 +99,12 @@ module.exports = async function (context, req) {
           }
         } catch (err) {
           context.log.warn(`Erro ao obter imagem do Mapillary: ${err.message}`);
+        }
+
+        // Se falhou imagem, usa o default com base no tipo
+        if (!imagemURL) {
+          const tipoFormatado = categoria.toLowerCase();
+          imagemURL = `https://${storageAccount}.blob.core.windows.net/${blobContainer}/default/${tipoFormatado}.jpg`;
         }
 
         const local = {
