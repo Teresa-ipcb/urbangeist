@@ -1,30 +1,15 @@
-# Imagem base com Node.js + ferramentas para o sharp
-FROM node:18-slim
+# Imagem base oficial do Azure Functions para Node.js
+FROM mcr.microsoft.com/azure-functions/node:4-node18
 
-# Instalar dependências para compilar native modules (sharp)
-RUN apt-get update && apt-get install -y \
-  build-essential \
-  python3 \
-  libcairo2-dev \
-  libjpeg-dev \
-  libpango1.0-dev \
-  libgif-dev \
-  librsvg2-dev \
-  && rm -rf /var/lib/apt/lists/*
+# Diretório de trabalho da Function
+WORKDIR /home/site/wwwroot/ampliarImagem
 
-# Diretório de trabalho
-WORKDIR /app
-
-# Copiar apenas package.json e instalar dependências
-COPY package.json ./
-RUN npm install
-
-# Copiar o restante código
+# Copiar os ficheiros da função
 COPY . .
 
-# Porta usada pelo Azure Functions custom handler
-ENV PORT=80
-EXPOSE 80
+# Instalar as dependências (incluindo 'sharp' com binário compatível)
+RUN apt-get update && apt-get install -y libvips-dev \
+    && npm install --omit=dev
 
-# Comando de arranque para o handler
-CMD ["node", "index.js"]
+# Expõe a porta (obrigatório para Azure Functions em container)
+EXPOSE 80
