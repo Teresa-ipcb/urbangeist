@@ -34,7 +34,7 @@ echo "Construindo imagem diretamente no ACR..."
 az acr build \
   --registry $ACR_NAME \
   --image $IMAGE_NAME:latest \
-  --file ./ampliarImagem/Dockerfile \
+  --file ./Dockerfile \
   ./ampliarImagem
 
 # 4. Criar App Service Plan se necessário
