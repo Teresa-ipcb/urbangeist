@@ -111,6 +111,11 @@ document.getElementById("btn_criar").addEventListener("click", async function ()
         
         if (response.ok) {
             localStorage.setItem("user_email", email);
+            // Guarda a sessão no localStorage
+            localStorage.setItem("sessionId", data.sessionId);
+            localStorage.setItem("user_email", data.email);
+            localStorage.setItem("user_nome", data.nome);
+            
             window.location.href = "formPerguntas.html";
         } else {
             try {
