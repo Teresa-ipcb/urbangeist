@@ -1,17 +1,28 @@
 #!/bin/bash
 
 # Variáveis de configuração
-IMAGE_NAME=ampliarimagem
-ACR_NAME=urbangeistregistry
-RESOURCE_GROUP=urbangeist-rg
-FUNCTION_APP_NAME=urbangeist-ampliarimagem
-STORAGE_ACCOUNT_NAME=urbangeiststorage # <-- substitui se for diferente
-PLAN_NAME=urbangeist-plan # <-- substitui se necessário
+IMAGE_NAME="ampliarimagem"
+ACR_NAME="urbangeistregistry"
+RESOURCE_GROUP="urbangeist-rg"
+FUNCTION_APP_NAME="urbangeist-ampliarimagem"
+STORAGE_ACCOUNT_NAME="urbangeiststorage"
+PLAN_NAME="urbangeist-app-plan"
+LOCATION="francecentral"
 
-# Criar o ACR (caso não exista)
-az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP &> /dev/null
-if [ $? -ne 0 ]; then
-  echo "A criar Azure Container Registry $ACR_NAME..."
+# 1. Criar App Service Plan (se não existir)
+if ! az appservice plan show --name $PLAN_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+  echo "Criando App Service Plan..."
+  az appservice plan create \
+    --name $PLAN_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --location $LOCATION \
+    --sku B1 \
+    --is-linux
+fi
+
+# 2. Criar ACR (se não existir)
+if ! az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+  echo "Criando Azure Container Registry..."
   az acr create \
     --name $ACR_NAME \
     --resource-group $RESOURCE_GROUP \
@@ -19,33 +30,42 @@ if [ $? -ne 0 ]; then
     --admin-enabled true
 fi
 
-# Obter login server do ACR
+# 3. Login no ACR (sem Docker)
+echo "Obtendo token do ACR..."
+ACR_TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
 REGISTRY=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query loginServer --output tsv)
 
-# Login no ACR
-az acr login --name $ACR_NAME
+# 4. Construir e fazer push da imagem (usando ACR Tasks)
+echo "Construindo imagem diretamente no ACR..."
+az acr build \
+  --registry $ACR_NAME \
+  --image $IMAGE_NAME \
+  --file ./ampliarImagem/Dockerfile \
+  ./ampliarImagem
 
-# Construir a imagem Docker
-docker build -t $REGISTRY/$IMAGE_NAME ./ampliarImagem
-
-# Push da imagem para o ACR
-docker push $REGISTRY/$IMAGE_NAME
-
-# Criar Function App (caso não exista)
+# 5. Criar/Atualizar Function App
 if ! az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+  echo "Criando Function App..."
   az functionapp create \
     --name $FUNCTION_APP_NAME \
     --resource-group $RESOURCE_GROUP \
     --storage-account $STORAGE_ACCOUNT_NAME \
     --plan $PLAN_NAME \
     --functions-version 4 \
-    --deployment-container-image-name $REGISTRY/$IMAGE_NAME
+    --runtime node \
+    --runtime-version 18 \
+    --image $REGISTRY/$IMAGE_NAME:latest \
+    --assign-identity '[system]'
 else
-  echo "Atualizar imagem da Function App existente..."
+  echo "Atualizando Function App..."
   az functionapp config container set \
     --name $FUNCTION_APP_NAME \
     --resource-group $RESOURCE_GROUP \
-    --docker-custom-image-name $REGISTRY/$IMAGE_NAME
+    --docker-registry-server-url https://$REGISTRY \
+    --docker-registry-server-user $ACR_NAME \
+    --docker-registry-server-password $ACR_TOKEN \
+    --docker-custom-image-name $REGISTRY/$IMAGE_NAME:latest
 fi
 
-echo "✅ Deploy completo de $IMAGE_NAME para $FUNCTION_APP_NAME"
+echo "✅ Deploy completo!"
+echo "URL da Function App: https://$(az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP --query defaultHostName --output tsv)"
