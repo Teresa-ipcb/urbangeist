@@ -17,6 +17,7 @@
             <div class="nav-links">
                 <ul>
                     <li><a href="frontend/authentication.html"><img src="frontend/images/perfil.png" class="header-imgs" alt="Perfil"></a></li>
+                    <li><a href="#" onclick="logout()" style="cursor: pointer;">Logout</a></li>
                 </ul> 
             </div>
         </nav>
@@ -53,5 +54,26 @@
 
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
     <script src="script.js" defer></script>
+    <script>
+    async function logout() {
+        const sessionId = localStorage.getItem("sessionId");
+    
+        try {
+            await fetch('https://urbangeist-function.azurewebsites.net/api/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            });
+        } catch (e) {
+            console.warn("Erro ao chamar logout backend:", e);
+        }
+    
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("user_email");
+        localStorage.removeItem("user_nome");
+        window.location.href = "frontend/authentication.html";
+    }
+</script>
 </body>
 </html>
