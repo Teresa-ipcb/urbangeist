@@ -10,7 +10,6 @@ let previousCameraState = null;
 document.addEventListener('DOMContentLoaded', async () => {
   // Verificar utilizador
   checkSession();
-  document.querySelector('a[onclick="logout()"]').style.display = 'none';
   
   // Configurar eventos dos botões de visualização
   document.getElementById('modo-lista').addEventListener('click', alternarModoVisualizacao);
@@ -424,6 +423,7 @@ function enviarFeedback(nomeLocal, tipo) {
 }
 
 async function checkSession() {
+    document.querySelector('a[onclick="logout()"]').style.display = 'none';
     const sessionId = localStorage.getItem("sessionId");
 
     if (!sessionId) {
@@ -441,6 +441,7 @@ async function checkSession() {
     const data = await response.json();
     if (response.ok && data.isValid) {
         console.log("Sessão válida:", data.email);
+        document.querySelector('a[onclick="logout()"]').style.display = 'block';
     } else {
         console.log("Sessão inválida:", data);
         window.location.href = "frontend/authentication.html";
