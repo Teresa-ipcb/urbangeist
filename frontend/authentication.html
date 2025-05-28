@@ -128,7 +128,8 @@ document.getElementById("btn_criar").addEventListener("click", async function ()
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
-            credentials: 'include' 
+            credentials: 'include', // Para enviar cookies
+            mode: 'cors' // Ativa o modo CORS explicitamente 
         });
     
         if (response.ok) {
