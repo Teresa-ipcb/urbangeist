@@ -10,7 +10,25 @@ module.exports = async function (context, req) {
         const collection = db.collection("tb_preferencias");
         await collection.insertOne({ email, ...preferencias });
 
-        context.res = { status: 200, body: "Preferências guardadas." };
+        const sessions = db.collection("tb_sessions");
+        const session = await sessions.findOne({
+            sessionId,
+            expiresAt: { $gt: new Date() }
+        });
+
+        if (!session) {
+            context.res = { status: 401, body: "Sessão inválida ou expirada.", headers };
+            return;
+        }
+
+        context.res = {
+            status: 200,
+            headers,
+            body: {
+                isValid: true,
+                email: session.email
+            }
+        };
     } catch (err) {
         context.res = { status: 500, body: "Erro ao guardar preferências." };
     } finally {
