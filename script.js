@@ -428,6 +428,7 @@ async function checkSession() {
 
     if (!sessionId) {
         console.log("Sessão não encontrada no localStorage");
+      document.querySelector('a[onclick="logout()"]').style.display = 'block';
         window.location.href = "frontend/authentication.html";
     }
 
