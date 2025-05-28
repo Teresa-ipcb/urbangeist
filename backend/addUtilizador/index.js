@@ -33,18 +33,9 @@ module.exports = async function (context, req) {
         // Cria utilizador
         await utilizadores.insertOne({ nome, email, password });
 
-        // Cria sessão diretamente (login imediato)
-        const sessionId = uuidv4();
-        await sessoes.insertOne({
-            sessionId,
-            email,
-            createdAt: new Date()
-        });
-
         context.res = {
             status: 200,
             body: {
-                sessionId,
                 email,
                 nome
             }
