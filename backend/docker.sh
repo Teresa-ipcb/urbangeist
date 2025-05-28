@@ -7,7 +7,7 @@ RESOURCE_GROUP="urbangeist-rg"
 FUNCTION_APP_NAME="urbangeist-ampliarimagem"
 STORAGE_ACCOUNT_NAME="urbangeiststorage"
 PLAN_NAME="urbangeist-plan"
-LOCATION="westeurope"
+LOCATION="francentral"
 
 # Verificar se o diretório ampliarImagem existe
 if [ ! -d "./ampliarImagem" ]; then
@@ -17,14 +17,36 @@ if [ ! -d "./ampliarImagem" ]; then
 fi
 
 # 1. Criar App Service Plan (se não existir)
-if ! az appservice plan show --name $PLAN_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
-  echo "Criando App Service Plan..."
-  az appservice plan create \
-    --name $PLAN_NAME \
+if ! az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
+  echo "Criando Function App..."
+  az functionapp create \
+    --name $FUNCTION_APP_NAME \
     --resource-group $RESOURCE_GROUP \
-    --location $LOCATION \
-    --sku B1 \
-    --is-linux
+    --storage-account $STORAGE_ACCOUNT_NAME \
+    --plan $PLAN_NAME \
+    --runtime "node" \
+    --functions-version 4 \
+    --os-type Linux \
+    --runtime-version 20 \
+    --deployment-container-image-name "$REGISTRY/$IMAGE_NAME:latest" \
+    --assign-identity '[system]'
+
+  # Configurar a autenticação do ACR (se necessário)
+  az functionapp config appsettings set \
+    --name $FUNCTION_APP_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --settings DOCKER_REGISTRY_SERVER_URL="https://$registry/" \
+                DOCKER_REGISTRY_SERVER_USERNAME="$ACR_NAME" \
+                DOCKER_REGISTRY_SERVER_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" --output tsv)
+else
+  echo "Atualizando Function App..."
+  az functionapp config container set \
+    --name $FUNCTION_APP_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --docker-custom-image-name "$REGISTRY/$IMAGE_NAME:latest" \
+    --docker-registry-server-url "https://$registry/" \
+    --docker-registry-server-user $ACR_NAME \
+    --docker-registry-server-password $(az acr credential show --name $ACR_NAME --query "passwords[0].value" --output tsv)
 fi
 
 # 2. Criar ACR (se não existir)
