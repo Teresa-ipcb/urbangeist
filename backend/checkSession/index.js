@@ -1,53 +1,62 @@
-// checkSession/index.js
 const { MongoClient } = require("mongodb");
 
 module.exports = async function (context, req) {
-    // Configuração de CORS
-    context.res = {
-        headers: {
-            "Access-Control-Allow-Origin": "https://urbangeist-app.azurewebsites.net",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Methods": "GET, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Set-Cookie"
-        }
-    };
-    
-    if (req.method === "OPTIONS") {
-        return context.res;
-    }
-    
-    const sessionId = req.cookies.sessionId;
-    const client = new MongoClient(process.env.COSMOSDB_CONN_STRING);
+    const allowedOrigins = [
+        'https://urbangeist-app.azurewebsites.net',
+        'http://localhost:3000'
+    ];
+    const origin = req.headers.origin;
 
-    if (!sessionId) {
-        context.res = { status: 401, body: "Sessão não encontrada." };
+    const headers = {
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    };
+    if (allowedOrigins.includes(origin)) {
+        headers["Access-Control-Allow-Origin"] = origin;
+    }
+
+    if (req.method === "OPTIONS") {
+        context.res = { status: 204, headers };
         return;
     }
+
+    const authHeader = req.headers["authorization"];
+    const sessionId = authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+
+    if (!sessionId) {
+        context.res = { status: 401, body: "Sessão não enviada.", headers };
+        return;
+    }
+
+    const client = new MongoClient(process.env.COSMOSDB_CONN_STRING);
 
     try {
         await client.connect();
         const db = client.db("urbangeist");
-        const sessions = db.collection("tb_sessao");
-        
-        const session = await sessions.findOne({ 
+        const sessions = db.collection("tb_sessions");
+
+        const session = await sessions.findOne({
             sessionId,
             expiresAt: { $gt: new Date() }
         });
 
         if (!session) {
-            context.res = { status: 401, body: "Sessão expirada ou inválida." };
+            context.res = { status: 401, body: "Sessão inválida ou expirada.", headers };
             return;
         }
 
-        context.res = { 
+        context.res = {
             status: 200,
+            headers,
             body: {
                 isValid: true,
                 email: session.email
             }
         };
     } catch (err) {
-        context.res = { status: 500, body: "Erro ao verificar sessão." };
+        context.res = { status: 500, body: "Erro ao verificar sessão.", headers };
     } finally {
         await client.close();
     }
