@@ -165,6 +165,13 @@ document.querySelector("form").addEventListener("submit", async function (e) {
 
     if (response.ok) {
         alert("Preferências guardadas com sucesso!");
+
+        const data = await response.json();
+        // Guarda a sessão no localStorage
+        localStorage.setItem("sessionId", data.sessionId);
+        localStorage.setItem("user_email", data.email);
+        localStorage.setItem("user_nome", data.nome);
+      
         window.location.href = "../index.html";
     } else {
         alert("Erro ao guardar preferências.");
