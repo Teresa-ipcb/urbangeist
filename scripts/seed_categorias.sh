@@ -65,6 +65,10 @@ npm install
 # Publicar function app
 func azure functionapp publish urbangeist-function --force --javascript
 
+# Docker Container
+chmod +x docker.sh
+./docker.sh
+
 cd ..
 
 # Liberar link aplicação
