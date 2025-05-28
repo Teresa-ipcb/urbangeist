@@ -8,6 +8,10 @@ let previousCameraState = null;
 
 // Inicialização quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', async () => {
+  // Verificar utilizador
+  checkSession();
+  document.querySelector('a[onclick="logout()"]').style.display = 'none';
+  
   // Configurar eventos dos botões de visualização
   document.getElementById('modo-lista').addEventListener('click', alternarModoVisualizacao);
   document.getElementById('modo-grelha').addEventListener('click', alternarModoVisualizacao);
@@ -417,4 +421,28 @@ function fecharDetalhes() {
 function enviarFeedback(nomeLocal, tipo) {
   console.log(`Feedback ${tipo} para ${nomeLocal}`);
   //adicionar info na bd
+}
+
+async function checkSession() {
+    const sessionId = localStorage.getItem("sessionId");
+
+    if (!sessionId) {
+        console.log("Sessão não encontrada no localStorage");
+        window.location.href = "frontend/authentication.html";
+    }
+
+    const response = await fetch("https://urbangeist-function.azurewebsites.net/api/checkSession", {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${sessionId}`
+        }
+    });
+
+    const data = await response.json();
+    if (response.ok && data.isValid) {
+        console.log("Sessão válida:", data.email);
+    } else {
+        console.log("Sessão inválida:", data);
+        window.location.href = "frontend/authentication.html";
+    }
 }
