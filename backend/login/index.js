@@ -2,34 +2,24 @@ const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 
 module.exports = async function (context, req) {
-    // Configuração de CORS para todas as origens (em desenvolvimento)
     const allowedOrigins = [
         'https://urbangeist-app.azurewebsites.net',
         'http://localhost:3000'
     ];
-
     const origin = req.headers.origin;
+
     const headers = {
-        'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };
-
     if (allowedOrigins.includes(origin)) {
         headers['Access-Control-Allow-Origin'] = origin;
     }
 
     if (req.method === "OPTIONS") {
-        const preflightHeaders = {
-            ...headers,
-            'Access-Control-Allow-Credentials': 'true',
-            'Access-Control-Allow-Origin': origin
-        };
-
         context.res = {
             status: 204,
-            headers: preflightHeaders,
-            body: null
+            headers: headers
         };
         return;
     }
@@ -46,12 +36,12 @@ module.exports = async function (context, req) {
         const user = await collection.findOne({ email });
 
         if (!user) {
-            context.res = { status: 404, body: "Utilizador não encontrado." };
+            context.res = { status: 404, body: "Utilizador não encontrado.", headers };
             return;
         }
 
         if (user.password !== password) {
-            context.res = { status: 401, body: "Password incorreta." };
+            context.res = { status: 401, body: "Password incorreta.", headers };
             return;
         }
 
@@ -67,32 +57,18 @@ module.exports = async function (context, req) {
             ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress
         });
 
-        // Garantir sempre que o header 'Access-Control-Allow-Credentials' está definido
-        const fullHeaders = {
-            ...headers,
-            'Access-Control-Allow-Credentials': 'true',
-            'Access-Control-Allow-Origin': origin // volta a definir só por garantia
-        };
-    
         context.res = {
             status: 200,
-            headers: fullHeaders,
+            headers,
             body: {
                 message: "Login bem-sucedido.",
+                sessionId,
                 nome: user.nome,
                 email: user.email
-            },
-            cookies: [{
-                name: "sessionId",
-                value: sessionId,
-                maxAge: 86400,
-                httpOnly: true,
-                secure: true,
-                sameSite: "None"
-            }]
+            }
         };
     } catch (err) {
-        context.res = { status: 500, body: "Erro ao fazer login." };
+        context.res = { status: 500, body: "Erro ao fazer login.", headers };
     } finally {
         await client.close();
     }
