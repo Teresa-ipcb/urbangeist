@@ -20,9 +20,15 @@ module.exports = async function (context, req) {
     }
 
     if (req.method === "OPTIONS") {
+        const preflightHeaders = {
+            ...headers,
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Origin': origin
+        };
+
         context.res = {
             status: 204,
-            headers: headers,
+            headers: preflightHeaders,
             body: null
         };
         return;
@@ -61,9 +67,16 @@ module.exports = async function (context, req) {
             ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress
         });
 
+        // Garantir sempre que o header 'Access-Control-Allow-Credentials' está definido
+        const fullHeaders = {
+            ...headers,
+            'Access-Control-Allow-Credentials': 'true',
+            'Access-Control-Allow-Origin': origin // volta a definir só por garantia
+        };
+    
         context.res = {
             status: 200,
-            headers,
+            headers: fullHeaders,
             body: {
                 message: "Login bem-sucedido.",
                 nome: user.nome,
@@ -74,8 +87,8 @@ module.exports = async function (context, req) {
                 value: sessionId,
                 maxAge: 86400,
                 httpOnly: true,
-                secure: true, // obrigatório se SameSite = None
-                sameSite: "None" 
+                secure: true,
+                sameSite: "None"
             }]
         };
     } catch (err) {
