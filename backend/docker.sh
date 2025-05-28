@@ -5,7 +5,7 @@ IMAGE_NAME="ampliarimagem"
 ACR_NAME="urbangeistregistry"
 RESOURCE_GROUP="urbangeist-rg"
 FUNCTION_APP_NAME="urbangeist-ampliarimagem"
-STORAGE_ACCOUNT_NAME="urbangeiststorage"
+STORAGE_ACCOUNT_NAME="teste56"
 PLAN_NAME="urbangeist-plan"
 LOCATION="francecentral"
 
