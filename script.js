@@ -307,9 +307,8 @@ function mostrarDetalhesLocal(local) {
     <div class="detalhes-conteudo">
       <button class="fechar-btn" onclick="fecharDetalhes()">×</button>
       <img src="${local.imagemOriginal || local.imagem}" 
-       data-id="${local._id}" 
-       onclick="ampliarImagem(this)" 
-       class="imagem-local">
+         data-id="${local._id}" 
+         class="imagem-local">
      
       <h2>${local.nome || "Local Desconhecido"}</h2>
       
@@ -344,6 +343,11 @@ function mostrarDetalhesLocal(local) {
   container.style.display = 'block';
   
   // Configurar eventos
+  const imgElement = container.querySelector('.imagem-local');
+  if (imgElement) {
+    imgElement.addEventListener('click', () => ampliarImagem(imgElement));
+  }
+  
   container.querySelector('.fechar-btn').addEventListener('click', () => {
     container.style.display = 'none';
   });
@@ -385,6 +389,7 @@ async function ampliarImagem(imgElement) {
       <div class="modal-content">
         <img src="${data.locais[0].urlOriginal}" alt="Imagem ampliada" class="imagem-ampliada">
       </div>`;
+    
     overlay.onclick = () => overlay.remove();
     document.body.appendChild(overlay);
   } catch (err) {
@@ -392,6 +397,7 @@ async function ampliarImagem(imgElement) {
     alert("Não foi possível ampliar a imagem.");
   }
 }
+
 
 
 // Gerencia favoritos
