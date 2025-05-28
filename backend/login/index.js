@@ -1,6 +1,33 @@
 const { MongoClient } = require("mongodb");
 
 module.exports = async function (context, req) {
+    / Configuração de CORS para todas as origens (em desenvolvimento)
+    const allowedOrigins = [
+        'https://urbangeist-app.azurewebsites.net',
+        'http://localhost:3000' // Para desenvolvimento local
+    ];
+    
+    const origin = req.headers.origin;
+    const headers = {
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    };
+
+    if (allowedOrigins.includes(origin)) {
+        headers['Access-Control-Allow-Origin'] = origin;
+    }
+
+    // Resposta para requisições OPTIONS (pré-voo)
+    if (req.method === "OPTIONS") {
+        context.res = {
+            status: 204,
+            headers: headers,
+            body: null
+        };
+        return;
+    }
+    
     const { email, password } = req.body;
     const client = new MongoClient(process.env.COSMOSDB_CONN_STRING);
 
