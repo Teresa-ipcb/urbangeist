@@ -10,6 +10,7 @@ let previousCameraState = null;
 document.addEventListener('DOMContentLoaded', async () => {
   // Verificar utilizador
   checkSession();
+  document.querySelector('a[onclick="logout()"]').style.display = 'none';
   
   // Configurar eventos dos botões de visualização
   document.getElementById('modo-lista').addEventListener('click', alternarModoVisualizacao);
