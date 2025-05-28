@@ -1,15 +1,30 @@
-FROM mcr.microsoft.com/azure-functions/node:4-node18
+# Imagem base com Node.js + ferramentas para o sharp
+FROM node:18-slim
 
-ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+# Instalar dependências para compilar native modules (sharp)
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  python3 \
+  libcairo2-dev \
+  libjpeg-dev \
+  libpango1.0-dev \
+  libgif-dev \
+  librsvg2-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-# Instala dependências necessárias para o sharp funcionar
-RUN apt-get update && \
-    apt-get install -y libvips-dev
+# Diretório de trabalho
+WORKDIR /app
 
-# Copia apenas a função ampliarImagem
-COPY . /home/site/wwwroot/ampliarImagem
+# Copiar apenas package.json e instalar dependências
+COPY package.json ./
+RUN npm install
 
-# Vai para a pasta da função e instala as dependências
-RUN cd /home/site/wwwroot/ampliarImagem && \
-    npm install --omit=dev --include=optional
+# Copiar o restante código
+COPY . .
+
+# Porta usada pelo Azure Functions custom handler
+ENV PORT=80
+EXPOSE 80
+
+# Comando de arranque para o handler
+CMD ["node", "index.js"]
