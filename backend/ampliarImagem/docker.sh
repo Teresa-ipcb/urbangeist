@@ -6,8 +6,15 @@ ACR_NAME="urbangeistregistry"
 RESOURCE_GROUP="urbangeist-rg"
 FUNCTION_APP_NAME="urbangeist-ampliarimagem"
 STORAGE_ACCOUNT_NAME="urbangeiststorage"
-PLAN_NAME="urbangeist-app-plan"
-LOCATION="francecentral"
+PLAN_NAME="urbangeist-plan"
+LOCATION="westeurope"
+
+# Verificar se o diretório ampliarImagem existe
+if [ ! -d "./ampliarImagem" ]; then
+  echo "Erro: Diretório ampliarImagem não encontrado."
+  echo "Execute este script do diretório pai (onde a pasta ampliarImagem está localizada)."
+  exit 1
+fi
 
 # 1. Criar App Service Plan (se não existir)
 if ! az appservice plan show --name $PLAN_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
@@ -30,18 +37,16 @@ if ! az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP &> /dev/null;
     --admin-enabled true
 fi
 
-# 3. Login no ACR (sem Docker)
-echo "Obtendo token do ACR..."
-ACR_TOKEN=$(az acr login --name $ACR_NAME --expose-token --output tsv --query accessToken)
-REGISTRY=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query loginServer --output tsv)
-
-# 4. Construir e fazer push da imagem (usando ACR Tasks)
+# 3. Construir e fazer push da imagem
 echo "Construindo imagem diretamente no ACR..."
 az acr build \
   --registry $ACR_NAME \
   --image $IMAGE_NAME \
   --file ./ampliarImagem/Dockerfile \
   ./ampliarImagem
+
+# 4. Obter informações do ACR
+REGISTRY=$(az acr show --name $ACR_NAME --resource-group $RESOURCE_GROUP --query loginServer --output tsv)
 
 # 5. Criar/Atualizar Function App
 if ! az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP &> /dev/null; then
@@ -53,19 +58,30 @@ if ! az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GR
     --plan $PLAN_NAME \
     --functions-version 4 \
     --runtime node \
-    --runtime-version 18 \
+    --runtime-version 20 \  # Atualizado para versão LTS atual
     --image $REGISTRY/$IMAGE_NAME:latest \
     --assign-identity '[system]'
+  
+  # Verificar se a criação foi bem-sucedida
+  if [ $? -ne 0 ]; then
+    echo "Erro ao criar Function App. Verifique os detalhes acima."
+    exit 1
+  fi
 else
   echo "Atualizando Function App..."
   az functionapp config container set \
     --name $FUNCTION_APP_NAME \
     --resource-group $RESOURCE_GROUP \
-    --docker-registry-server-url https://$REGISTRY \
-    --docker-registry-server-user $ACR_NAME \
-    --docker-registry-server-password $ACR_TOKEN \
     --docker-custom-image-name $REGISTRY/$IMAGE_NAME:latest
 fi
 
-echo "✅ Deploy completo!"
-echo "URL da Function App: https://$(az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP --query defaultHostName --output tsv)"
+# 6. Verificar e mostrar URL
+FUNCTION_URL=$(az functionapp show --name $FUNCTION_APP_NAME --resource-group $RESOURCE_GROUP --query defaultHostName --output tsv 2>/dev/null)
+
+if [ -z "$FUNCTION_URL" ]; then
+  echo "Erro: Não foi possível obter a URL da Function App. Verifique se a implantação foi bem-sucedida."
+  exit 1
+else
+  echo "Deploy completo!"
+  echo "URL da Function App: https://$FUNCTION_URL"
+fi
