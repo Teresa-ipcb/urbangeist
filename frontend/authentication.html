@@ -15,6 +15,9 @@
             <ul>
                 <li><a href="authentication.html"><img src="images/perfil.png" class="header-imgs" alt="Perfil"></a></li>
             </ul> 
+            <ul>
+                <li><a href="#" onclick="logout()" style="cursor: pointer;">Logout</a></li>
+            </ul> 
         </div>
     </nav>
     <hr>
@@ -82,6 +85,14 @@
 </footer>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const sessionId = localStorage.getItem("sessionId");
+    if (!sessionId) {
+        // Esconde o logout se não houver sessão
+        document.querySelector('a[onclick="logout()"]').style.display = 'none';
+    }
+});
+    
 document.getElementById("btn_criar").addEventListener("click", async function () {
     const nome = document.getElementById("pNome").value;
     const email = document.getElementById("emailR").value;
@@ -145,6 +156,27 @@ document.getElementById("btn_criar").addEventListener("click", async function ()
             console.error("Erro:", err);
             alert("Erro de conexão com o servidor.");
         }
+    }
+</script>
+<script>
+    async function logout() {
+        const sessionId = localStorage.getItem("sessionId");
+    
+        try {
+            await fetch('https://urbangeist-function.azurewebsites.net/api/logout', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            });
+        } catch (e) {
+            console.warn("Erro ao chamar logout backend:", e);
+        }
+    
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("user_email");
+        localStorage.removeItem("user_nome");
+        window.location.href = "authentication.html";
     }
 </script>
 </body>
