@@ -423,12 +423,10 @@ function enviarFeedback(nomeLocal, tipo) {
 }
 
 async function checkSession() {
-    document.querySelector('a[onclick="logout()"]').style.display = 'none';
     const sessionId = localStorage.getItem("sessionId");
 
     if (!sessionId) {
         console.log("Sessão não encontrada no localStorage");
-      document.querySelector('a[onclick="logout()"]').style.display = 'block';
         window.location.href = "frontend/authentication.html";
     }
 
