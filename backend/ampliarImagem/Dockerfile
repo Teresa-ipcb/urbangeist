@@ -1,15 +1,15 @@
-# Imagem base oficial do Azure Functions para Node.js
+# Imagem base do Azure Functions para Node.js
 FROM mcr.microsoft.com/azure-functions/node:4-node18
 
-# Diretório de trabalho da Function
-WORKDIR /home/site/wwwroot/ampliarImagem
+# Diretório de trabalho padrão
+WORKDIR /home/site/wwwroot
 
-# Copiar os ficheiros da função
-COPY . .
+# Copiar todos os ficheiros da função (assumindo que estás na raiz e "ampliarImagem" contém a função)
+COPY ./ampliarImagem .
 
 # Instalar as dependências (incluindo 'sharp' com binário compatível)
 RUN apt-get update && apt-get install -y libvips-dev \
     && npm install --omit=dev
 
-# Expõe a porta (obrigatório para Azure Functions em container)
+# Porta padrão
 EXPOSE 80
