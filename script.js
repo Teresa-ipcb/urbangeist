@@ -431,7 +431,7 @@ async function checkSession() {
         window.location.href = "frontend/authentication.html";
     }
 
-    const response = await fetch("https://urbangeist-function.azurewebsites.net/api/checkSession", {
+    /*const response = await fetch("https://urbangeist-function.azurewebsites.net/api/checkSession", {
         method: "GET",
         headers: {
             "Authorization": `Bearer ${sessionId}`
@@ -445,5 +445,5 @@ async function checkSession() {
     } else {
         console.log("Sessão inválida:", data);
         window.location.href = "frontend/authentication.html";
-    }
+    }*/
 }
