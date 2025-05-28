@@ -195,9 +195,5 @@ cd scripts
 npm install mongodb@3.7 > /dev/null 2>&1
 cd ..
 
-chmod +x scripts/seed_utilizadores.sh
-./scripts/seed_utilizadores.sh
-chmod +x scripts/seed_preferencias.sh
-./scripts/seed_preferencias.sh
 chmod +x scripts/seed_categorias.sh
 ./scripts/seed_categorias.sh
