@@ -12,6 +12,7 @@
     "axios": "^1.9.0",
     "mongodb": "^3.7.3",
     "@azure/storage-blob": "^12.15.0",
-    "sharp": "^0.33.2"
+    "sharp": "^0.33.2",
+    "uuid": "^9.0.1"
   }
 }
