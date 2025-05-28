@@ -88,6 +88,25 @@ hr {
     margin-bottom: 30px;
 }
 
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content img.imagem-ampliada {
+  max-width: 90vw;
+  max-height: 90vh;
+  border-radius: 10px;
+}
+
 /* Filtros */
 #filtros {
   display: flex;
