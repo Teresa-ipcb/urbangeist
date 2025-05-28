@@ -72,10 +72,10 @@ module.exports = async function (context, req) {
             cookies: [{
                 name: "sessionId",
                 value: sessionId,
-                maxAge: 24 * 60 * 60,
+                maxAge: 86400,
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "Strict"
+                secure: true, // obrigatório se SameSite = None
+                sameSite: "None" 
             }]
         };
     } catch (err) {
